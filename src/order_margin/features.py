@@ -14,6 +14,9 @@ from order_margin.config import CATEGORIES, PAYMENTS, ZONES
 
 RESOLVE_DAYS = 14
 PRIOR_STRENGTH = 5.0  # pseudo-orders pulling a thin history towards the population rate
+# Fixed long-run rates for that pull. Computing them from the frame itself would let the
+# test window's outcomes leak into every training row's features.
+POPULATION_RATE = {"returned": 0.09, "failed_delivery": 0.05, "cancelled": 0.055}
 
 NUMERIC = [
     "log_value",
@@ -64,15 +67,10 @@ def customer_history(orders: pd.DataFrame, resolve_days: int = RESOLVE_DAYS) -> 
 
     outcome = o["outcome"].to_numpy()
     cod = (o["payment"].to_numpy() == "cod").astype(float)
-    base = {
-        "returned": float((outcome == "returned").mean()),
-        "failed_delivery": float((outcome == "failed_delivery").mean()),
-        "cancelled": float((outcome == "cancelled").mean()),
-    }
 
     def rate(name: str) -> np.ndarray:
         hits = prior_count((outcome == name).astype(float))
-        return (hits + PRIOR_STRENGTH * base[name]) / (resolved + PRIOR_STRENGTH)
+        return (hits + PRIOR_STRENGTH * POPULATION_RATE[name]) / (resolved + PRIOR_STRENGTH)
 
     c_cod = np.r_[0, np.cumsum(cod)]
     prior_orders = idx - group_start
