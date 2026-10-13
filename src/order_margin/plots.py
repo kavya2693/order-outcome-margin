@@ -7,12 +7,12 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
-import pandas as pd  # noqa: E402
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 
-from order_margin.calibration import reliability_curve  # noqa: E402
-from order_margin.config import CLASSES  # noqa: E402
+from order_margin.calibration import reliability_curve
+from order_margin.config import CLASSES
 
 COLORS = ["#2a6fdb", "#d1495b", "#3c9d5d", "#8a5cc2", "#e08e0b"]
 
@@ -42,7 +42,7 @@ def plot_daily(daily: pd.DataFrame, path: Path) -> None:
     fig, ax = plt.subplots(figsize=(12, 4))
     idx = pd.to_datetime(daily.index)
     ax.plot(idx, daily["realized"], color="black", lw=1.6, label="realized")
-    for (name, c) in zip(
+    for name, c in zip(
         ["gbm + isotonic", "gbm class-weighted, raw", "class priors"], COLORS[:3], strict=True
     ):
         ax.plot(idx, daily[name], color=c, lw=1.0, label=f"expected, {name}")

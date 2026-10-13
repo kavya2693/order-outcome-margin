@@ -107,7 +107,9 @@ def run(
     prior = PriorModel().fit(X[fit_mask], y[fit_mask])
     logit = LogitModel().fit(X[m["train"]], y[m["train"]])
     log(f"logistic fitted ({time.time() - t0:.0f}s)")
-    gbm = GBMModel(max_rounds=max_rounds).fit(X[m["train"]], y[m["train"]], X[m["early_stop"]], y[m["early_stop"]])
+    gbm = GBMModel(max_rounds=max_rounds).fit(
+        X[m["train"]], y[m["train"]], X[m["early_stop"]], y[m["early_stop"]]
+    )
     log(f"gbm fitted, {gbm.best_iteration} rounds ({time.time() - t0:.0f}s)")
     gbmw = GBMModel(class_weighted=True, max_rounds=max_rounds).fit(
         X[m["train"]], y[m["train"]], X[m["early_stop"]], y[m["early_stop"]]
@@ -239,7 +241,9 @@ def run(
         [
             frontier(g_iso, conv, em_cod_true, em_card_true).assign(ranking="margin gain, gbm + isotonic"),
             frontier(risk, conv, em_cod_true, em_card_true).assign(ranking="risk score, gbm + isotonic"),
-            frontier(g_true, conv, em_cod_true, em_card_true).assign(ranking="margin gain, true probabilities"),
+            frontier(g_true, conv, em_cod_true, em_card_true).assign(
+                ranking="margin gain, true probabilities"
+            ),
         ]
     )
 

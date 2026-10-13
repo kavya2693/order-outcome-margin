@@ -78,7 +78,5 @@ def frontier(
     cum_gain = np.r_[0.0, np.cumsum(gain[order])]
     cum_lost = np.r_[0.0, np.cumsum(lost[order])]
     # Dense near zero, where the useful policies sit, and linear out to blocking everything.
-    k = np.unique(
-        np.r_[0, np.geomspace(1, len(score), n), np.linspace(0, len(score), n + 1)].astype(int)
-    )
+    k = np.unique(np.r_[0, np.geomspace(1, len(score), n), np.linspace(0, len(score), n + 1)].astype(int))
     return pd.DataFrame({"blocked": k, "orders_lost": cum_lost[k], "margin_change": cum_gain[k]})

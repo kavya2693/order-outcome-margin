@@ -50,7 +50,9 @@ def outcome_margins(
     gm = pd.Series(cat).map(econ.gross_margin).to_numpy(float)
     loss = pd.Series(cat).map(econ.resale_loss).to_numpy(float)
     cogs = value * (1.0 - gm)
-    ship_out = econ.ship_out_base + econ.ship_out_remote * remote + econ.ship_out_per_sqrt_item * np.sqrt(items)
+    ship_out = (
+        econ.ship_out_base + econ.ship_out_remote * remote + econ.ship_out_per_sqrt_item * np.sqrt(items)
+    )
     ship_fee = np.where(value >= econ.free_shipping_threshold, 0.0, econ.shipping_fee)
     fee = payment_fee(value, pay, econ)
     is_cod = pay == "cod"

@@ -151,13 +151,15 @@ def generate(
     value = median * n_items**0.55 * rng.lognormal(0.0, 0.55, n)
     bulk = rng.random(n) < 0.003
     value = np.where(bulk, value * rng.uniform(5, 12, n), value)
-    value = np.round(np.where(fraudster == 1, value * 1.8, value), 2)
+    value = np.round(np.where(fraudster == 1, value * 1.8, value).astype(float), 2)
 
     peak = d["is_peak"].to_numpy()
     discount = np.round(np.clip(rng.beta(1.2, 12.0, n) + 0.22 * peak * rng.random(n), 0, 0.7), 3)
     coupon = (rng.random(n) < 0.12 + 0.3 * peak).astype(int)
 
-    zone = np.where(rng.random(n) < 0.9, c["home_zone"].to_numpy(), np.array(ZONES)[rng.choice(6, n, p=ZONE_P)])
+    zone = np.where(
+        rng.random(n) < 0.9, c["home_zone"].to_numpy(), np.array(ZONES)[rng.choice(6, n, p=ZONE_P)]
+    )
     remote = np.isin(zone, list(REMOTE_ZONES))
     promised = 1 + remote * rng.integers(2, 4, n) + (rng.random(n) < 0.35) + peak
 
