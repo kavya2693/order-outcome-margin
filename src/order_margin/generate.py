@@ -20,6 +20,7 @@ ZONE_P = np.array([0.27, 0.22, 0.16, 0.17, 0.10, 0.08])
 CATEGORY_P = np.array([0.31, 0.15, 0.20, 0.18, 0.16])
 VALUE_MEDIAN = {"fashion": 165.0, "electronics": 520.0, "home": 210.0, "beauty": 105.0, "grocery": 130.0}
 ITEMS_LAMBDA = {"fashion": 1.0, "electronics": 0.25, "home": 0.8, "beauty": 1.3, "grocery": 4.5}
+FRAUD_ACTIVE_DAYS = 45
 OUTCOME_NOISE_SD = np.array([3.0, 5.0, 1.0, 3.0, 10.0])
 
 # Calendar events. Ramadan dates follow the lunar calendar; the sale weeks are the
@@ -80,7 +81,7 @@ def _customers(n: int, start: pd.Timestamp, n_days: int, rng: np.random.Generato
             "customer_id": np.arange(n),
             "signup": start + pd.to_timedelta(offset, unit="D"),
             "home_zone": np.array(ZONES)[zone],
-            "activity": np.where(fraudster, 4.0, rng.lognormal(0.0, 1.1, n)),
+            "activity": np.where(fraudster, 25.0, rng.lognormal(0.0, 1.1, n)),
             "cod_pref": np.where(fraudster, 0.05, cod_pref),
             "ret_trait": rng.normal(0.0, 0.7, n),
             "cancel_trait": rng.normal(0.0, 0.5, n),
@@ -104,6 +105,17 @@ def _assign_customers(
         u = rng.random(n) * cw[eligible - 1]
         ids[pos : pos + n] = order[np.searchsorted(cw[:eligible], u, side="right")]
         pos += n
+
+    # Fraud accounts burn out: after a few weeks they are closed or abandoned, so their
+    # later draws go to an ordinary customer instead.
+    fraud = cust["fraudster"].to_numpy()
+    days = cal["date"].to_numpy()[day_idx]
+    age = (days - cust["signup"].to_numpy()[ids]) / np.timedelta64(1, "D")
+    stale = (fraud[ids] == 1) & (age > FRAUD_ACTIVE_DAYS)
+    cw_clean = np.cumsum(np.where(fraud[order] == 1, 0.0, cust["activity"].to_numpy()[order]))
+    eligible = np.searchsorted(signup_sorted, days[stale], side="right")
+    u = rng.random(int(stale.sum())) * cw_clean[eligible - 1]
+    ids[stale] = order[np.searchsorted(cw_clean, u, side="right")]
     return day_idx, ids
 
 
