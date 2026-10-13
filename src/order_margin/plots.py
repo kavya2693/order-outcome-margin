@@ -58,12 +58,28 @@ def plot_frontier(fr: pd.DataFrame, policy: pd.DataFrame, path: Path) -> None:
     fig, ax = plt.subplots(figsize=(8, 5))
     for (name, g), c in zip(fr.groupby("ranking", sort=False), COLORS, strict=False):
         ax.plot(g["orders_lost"], g["margin_change"], lw=1.4, color=c, label=f"rank by {name}")
-    pts = policy[~policy["policy"].isin(["no blocking"])]
-    ax.scatter(pts["orders_lost"], pts["margin_change"], color="black", s=14, zorder=3)
-    for _, r in pts.iterrows():
-        ax.annotate(str(r["policy"]).split(",")[0][:28], (r["orders_lost"], r["margin_change"]), fontsize=7)
+    short = {
+        "rule of thumb: new customer and basket > 300": "rule of thumb",
+        "margin rule, gbm + isotonic": "margin rule",
+        "margin rule, class-weighted gbm": "margin rule, weighted gbm",
+        "block every COD order": "block all COD",
+    }
+    for _, r in policy.iterrows():
+        name = str(r["policy"])
+        label = "risk score, matched rate" if name.startswith("risk score") else short.get(name)
+        if label is None:
+            continue
+        ax.scatter([r["orders_lost"]], [r["margin_change"]], color="black", s=14, zorder=3)
+        ax.annotate(
+            label,
+            (r["orders_lost"], r["margin_change"]),
+            fontsize=7,
+            xytext=(4, -10),
+            textcoords="offset points",
+        )
     ax.axhline(0, color="grey", lw=0.8)
     ax.set_xscale("symlog", linthresh=100)
+    ax.set_xlim(left=0)
     ax.set_xlabel("orders lost (customers who do not switch to card)")
     ax.set_ylabel("change in expected contribution margin")
     ax.set_title("Blocking COD: margin gained against orders lost, test window")

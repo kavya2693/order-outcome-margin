@@ -35,6 +35,7 @@ def render(res: Results) -> str:
     err_fmt = dict.fromkeys(res.margin_error_by_outcome.columns, "+,.0f")
     sens = res.conversion_sensitivity.drop(columns=["policy"])
     pol_fmt = {
+        "cod_orders_blocked": ",.0f",
         "blocked_share_of_cod": ".1%",
         "orders_lost": ",.0f",
         "margin_change": "+,.0f",
