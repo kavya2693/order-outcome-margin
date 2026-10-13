@@ -1,24 +1,25 @@
 # Run report
 
 341,880 orders; test window 73,024 orders over 122 days,
-35,389 of them cash on delivery. Booster stopped at 208 rounds
-(class-weighted: 117). Realized test margin 3,059,183;
+35,389 of them cash on delivery. Booster stopped at 186 rounds
+(class-weighted: 121). Realized test margin 3,059,183;
 true expected margin 3,077,163, so the realized total sits
 -0.83 standard deviations from what the true probabilities expect
-(one SD of outcome noise is 0.70% of the total). Runtime 177.7s.
+(one SD of outcome noise is 0.70% of the total).
+Runtime 72.8s.
 
 ## Classification and calibration (test window)
 
 | model | macro_f1 | log_loss | ece_mean | ece_fraud | prob_mae_vs_truth |
 |---|---|---|---|---|---|
 | class priors | 0.1767 | 0.7442 | 0.0063 | 0.0014 | 0.0533 |
-| logistic, raw | 0.2894 | 0.6475 | 0.0028 | 0.0009 | 0.0260 |
-| logistic + isotonic | 0.2969 | 0.6480 | 0.0028 | 0.0004 | 0.0262 |
-| gbm, raw | 0.2927 | 0.6468 | 0.0025 | 0.0007 | 0.0258 |
-| gbm + Platt | 0.2917 | 0.6468 | 0.0028 | 0.0005 | 0.0257 |
-| gbm + isotonic | 0.2846 | 0.6478 | 0.0028 | 0.0006 | 0.0260 |
-| gbm class-weighted, raw | 0.2729 | 1.3064 | 0.2066 | 0.0431 | 0.2078 |
-| gbm class-weighted + isotonic | 0.2857 | 0.6571 | 0.0091 | 0.0009 | 0.0303 |
+| logistic, raw | 0.2901 | 0.6475 | 0.0027 | 0.0009 | 0.0260 |
+| logistic + isotonic | 0.2972 | 0.6479 | 0.0028 | 0.0004 | 0.0262 |
+| gbm, raw | 0.2944 | 0.6469 | 0.0027 | 0.0007 | 0.0258 |
+| gbm + Platt | 0.2902 | 0.6468 | 0.0029 | 0.0006 | 0.0257 |
+| gbm + isotonic | 0.2862 | 0.6478 | 0.0035 | 0.0006 | 0.0260 |
+| gbm class-weighted, raw | 0.2722 | 1.3050 | 0.2063 | 0.0422 | 0.2076 |
+| gbm class-weighted + isotonic | 0.2877 | 0.6572 | 0.0093 | 0.0008 | 0.0303 |
 | true probabilities (ceiling) | 0.3441 | 0.6181 | 0.0021 | 0.0002 | 0.0000 |
 
 ## Predicted / observed outcome counts (1.000 is exact)
@@ -26,13 +27,13 @@ true expected margin 3,077,163, so the realized total sits
 | model | count_ratio_returned | count_ratio_failed | count_ratio_fraud |
 |---|---|---|---|
 | class priors | 0.946 | 1.006 | 1.406 |
-| logistic, raw | 0.993 | 1.000 | 1.204 |
-| logistic + isotonic | 0.990 | 1.023 | 1.075 |
-| gbm, raw | 0.988 | 1.010 | 1.132 |
-| gbm + Platt | 0.984 | 1.012 | 1.090 |
-| gbm + isotonic | 0.981 | 1.015 | 1.110 |
-| gbm class-weighted, raw | 2.483 | 3.810 | 16.816 |
-| gbm class-weighted + isotonic | 0.945 | 1.021 | 1.196 |
+| logistic, raw | 0.993 | 0.999 | 1.204 |
+| logistic + isotonic | 0.990 | 1.022 | 1.074 |
+| gbm, raw | 0.990 | 1.013 | 1.144 |
+| gbm + Platt | 0.983 | 1.012 | 1.086 |
+| gbm + isotonic | 0.981 | 1.016 | 1.122 |
+| gbm class-weighted, raw | 2.487 | 3.803 | 16.475 |
+| gbm class-weighted + isotonic | 0.945 | 1.019 | 1.199 |
 | true probabilities (ceiling) | 1.002 | 0.989 | 1.006 |
 
 ## Expected vs realized contribution margin (test window)
@@ -40,35 +41,48 @@ true expected margin 3,077,163, so the realized total sits
 | model | margin_bias_pct | daily_mape | daily_mape_normal | daily_mape_peak |
 |---|---|---|---|---|
 | class priors | +1.72% | 10.65% | 9.59% | 22.54% |
-| logistic, raw | -0.07% | 8.03% | 8.23% | 5.78% |
-| logistic + isotonic | +0.42% | 8.02% | 8.24% | 5.52% |
-| gbm, raw | +0.87% | 7.98% | 8.28% | 4.62% |
-| gbm + Platt | +1.41% | 8.03% | 8.35% | 4.48% |
-| gbm + isotonic | +1.17% | 7.94% | 8.26% | 4.42% |
-| gbm class-weighted, raw | -183.47% | 183.09% | 180.16% | 215.86% |
-| gbm class-weighted + isotonic | +4.28% | 9.27% | 8.67% | 15.99% |
+| logistic, raw | -0.01% | 8.03% | 8.23% | 5.77% |
+| logistic + isotonic | +0.51% | 7.99% | 8.21% | 5.47% |
+| gbm, raw | +0.71% | 7.97% | 8.27% | 4.58% |
+| gbm + Platt | +1.43% | 8.03% | 8.35% | 4.46% |
+| gbm + isotonic | +1.06% | 7.92% | 8.24% | 4.31% |
+| gbm class-weighted, raw | -182.84% | 182.47% | 179.56% | 215.04% |
+| gbm class-weighted + isotonic | +4.24% | 9.28% | 8.67% | 16.01% |
 | true probabilities (ceiling) | +0.59% | 8.03% | 8.25% | 5.53% |
 
 ## Margin error by outcome (expected minus noise-free realized, test window)
 
 | outcome | logistic + isotonic | gbm + isotonic | true probabilities (ceiling) |
 |---|---|---|---|
-| delivered | +15,773 | +31,616 | +9,676 |
-| returned | +4,385 | +15,078 | -720 |
-| cancelled | -148 | -75 | +47 |
-| failed_delivery | -3,820 | -2,401 | +1,450 |
-| fraud_chargeback | -5,383 | -10,396 | +5,488 |
-| total | +10,807 | +33,821 | +15,941 |
+| delivered | +18,095 | +30,735 | +9,676 |
+| returned | +4,500 | +15,767 | -720 |
+| cancelled | -142 | -71 | +47 |
+| failed_delivery | -3,715 | -2,489 | +1,450 |
+| fraud_chargeback | -5,317 | -13,511 | +5,488 |
+| total | +13,421 | +30,431 | +15,941 |
 
 ## COD blocking policy (test window, scored on true probabilities)
 
 | policy | cod_orders_blocked | blocked_share_of_cod | orders_lost | margin_change | margin_change_pct | margin_per_order_lost |
 |---|---|---|---|---|---|---|
 | no blocking | 0 | 0.0% | 0 | +0 | +0.00% | nan |
-| block every COD order | 35389 | 100.0% | 14,469 | -509,868 | -16.57% | -35.2 |
+| block every COD order | 35,389 | 100.0% | 14,469 | -509,868 | -16.57% | -35.2 |
 | rule of thumb: new customer and basket > 300 | 673 | 1.9% | 404 | -25,412 | -0.83% | -62.9 |
-| risk score, same block rate as margin rule on calib (14.6%) | 5661 | 16.0% | 2,332 | -1,522 | -0.05% | -0.7 |
-| margin rule, uncalibrated gbm | 5939 | 16.8% | 2,405 | +22,602 | +0.73% | +9.4 |
-| margin rule, class-weighted gbm | 22788 | 64.4% | 9,233 | -171,784 | -5.58% | -18.6 |
-| margin rule, gbm + isotonic | 5475 | 15.5% | 2,218 | +22,504 | +0.73% | +10.1 |
-| margin rule, true probabilities (ceiling) | 5268 | 14.9% | 2,151 | +35,479 | +1.15% | +16.5 |
+| risk score, same block rate as margin rule on calib (14.6%) | 5,731 | 16.2% | 2,360 | -2,113 | -0.07% | -0.9 |
+| margin rule, uncalibrated gbm | 6,002 | 17.0% | 2,429 | +22,405 | +0.73% | +9.2 |
+| margin rule, class-weighted gbm | 22,625 | 63.9% | 9,165 | -168,782 | -5.49% | -18.4 |
+| margin rule, gbm + isotonic | 5,498 | 15.5% | 2,228 | +22,258 | +0.72% | +10.0 |
+| margin rule, true probabilities (ceiling) | 5,268 | 14.9% | 2,151 | +35,479 | +1.15% | +16.5 |
+
+Margin rule minus risk rule at matched volume: +24,371
+(order bootstrap 95% CI +21,580 to +27,556).
+
+## Sensitivity to the card-conversion assumption (decisions fixed)
+
+| actual_minus_assumed_conversion | cod_orders_blocked | blocked_share_of_cod | orders_lost | margin_change | margin_change_pct | margin_per_order_lost |
+|---|---|---|---|---|---|---|
+| -0.30 | 5,498 | 15.5% | 3,877 | -9,714 | -0.32% | -2.5 |
+| -0.20 | 5,498 | 15.5% | 3,327 | +944 | +0.03% | +0.3 |
+| -0.10 | 5,498 | 15.5% | 2,778 | +11,601 | +0.38% | +4.2 |
+| +0.00 | 5,498 | 15.5% | 2,228 | +22,258 | +0.72% | +10.0 |
+| +0.10 | 5,498 | 15.5% | 1,678 | +32,916 | +1.07% | +19.6 |

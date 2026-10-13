@@ -2,8 +2,8 @@ policy,cod_orders_blocked,blocked_share_of_cod,orders_lost,margin_change,margin_
 no blocking,0,0.0,0.0,0.0,0.0,
 block every COD order,35389,1.0,14468.6,-509868.0,-0.1657,-35.2396
 rule of thumb: new customer and basket > 300,673,0.019,403.8,-25412.0,-0.0083,-62.9315
-"risk score, same block rate as margin rule on calib (14.6%)",5661,0.16,2332.0,-1522.0,-0.0005,-0.6525
-"margin rule, uncalibrated gbm",5939,0.1678,2405.0,22602.0,0.0073,9.3977
-"margin rule, class-weighted gbm",22788,0.6439,9233.0,-171784.0,-0.0558,-18.6054
-"margin rule, gbm + isotonic",5475,0.1547,2217.6,22504.0,0.0073,10.1479
+"risk score, same block rate as margin rule on calib (14.6%)",5731,0.1619,2360.2,-2113.0,-0.0007,-0.8952
+"margin rule, uncalibrated gbm",6002,0.1696,2429.2,22405.0,0.0073,9.223
+"margin rule, class-weighted gbm",22625,0.6393,9164.8,-168782.0,-0.0549,-18.4164
+"margin rule, gbm + isotonic",5498,0.1554,2227.8,22258.0,0.0072,9.9911
 "margin rule, true probabilities (ceiling)",5268,0.1489,2151.2,35479.0,0.0115,16.4925

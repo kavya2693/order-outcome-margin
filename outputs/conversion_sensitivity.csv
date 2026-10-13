@@ -1,0 +1,6 @@
+actual_minus_assumed_conversion,policy,cod_orders_blocked,blocked_share_of_cod,orders_lost,margin_change,margin_change_pct,margin_per_order_lost
+-0.3,"margin rule, gbm + isotonic",5498,0.1554,3877.2,-9714.0,-0.0032,-2.5054
+-0.2,"margin rule, gbm + isotonic",5498,0.1554,3327.4,944.0,0.0003,0.2836
+-0.1,"margin rule, gbm + isotonic",5498,0.1554,2777.6,11601.0,0.0038,4.1766
+0.0,"margin rule, gbm + isotonic",5498,0.1554,2227.8,22258.0,0.0072,9.9911
+0.1,"margin rule, gbm + isotonic",5498,0.1554,1678.0,32916.0,0.0107,19.616
