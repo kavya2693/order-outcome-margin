@@ -1,0 +1,21 @@
+{
+  "orders_total": 341880,
+  "orders_test": 73024,
+  "cod_orders_test": 35389,
+  "test_days": 122,
+  "gbm_rounds": 208,
+  "gbm_weighted_rounds": 117,
+  "realized_margin_test": 3059183.3499999996,
+  "true_expected_margin_test": 3077162.606836656,
+  "realized_minus_true_expected_sd": -0.8299318406842183,
+  "outcome_noise_sd_of_total_pct": 0.007040100571470943,
+  "outcome_share_test": {
+    "delivered": 0.7914932077125328,
+    "returned": 0.09737894390885188,
+    "cancelled": 0.05824112620508326,
+    "failed_delivery": 0.05016159070990359,
+    "fraud_chargeback": 0.002725131463628396
+  },
+  "margin_rule_block_share_calib": 0.14579709072065736,
+  "runtime_seconds": 177.7
+}

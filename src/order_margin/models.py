@@ -73,9 +73,9 @@ class GBMModel:
         default_factory=lambda: {
             "objective": "multiclass",
             "num_class": N_CLASSES,
-            "learning_rate": 0.05,
-            "num_leaves": 48,
-            "min_data_in_leaf": 80,
+            "learning_rate": 0.03,
+            "num_leaves": 15,
+            "min_data_in_leaf": 200,
             "feature_fraction": 0.85,
             "bagging_fraction": 0.85,
             "bagging_freq": 1,
@@ -85,7 +85,8 @@ class GBMModel:
             "seed": 7,
         }
     )
-    max_rounds: int = 1500
+    # Chosen from four settings on the early-stopping and calibration windows, not the test window.
+    max_rounds: int = 3000
     booster: lgb.Booster | None = None
     best_iteration: int = 0
 
@@ -104,7 +105,7 @@ class GBMModel:
             train,
             num_boost_round=self.max_rounds,
             valid_sets=[val],
-            callbacks=[lgb.early_stopping(50, verbose=False)],
+            callbacks=[lgb.early_stopping(100, verbose=False)],
         )
         self.best_iteration = int(self.booster.best_iteration or self.max_rounds)
         return self

@@ -1,0 +1,7 @@
+,logistic + isotonic,gbm + isotonic,true probabilities (ceiling)
+delivered,15773.0,31616.0,9676.0
+returned,4385.0,15078.0,-720.0
+cancelled,-148.0,-75.0,47.0
+failed_delivery,-3820.0,-2401.0,1450.0
+fraud_chargeback,-5383.0,-10396.0,5488.0
+total,10807.0,33821.0,15941.0
