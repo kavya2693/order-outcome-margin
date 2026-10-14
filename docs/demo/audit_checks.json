@@ -1,0 +1,486 @@
+{
+ "generated": "2026-10-14 14:43",
+ "commit": "e78d53a391889af780be9f07f440398e04edc426",
+ "checks": [
+  {
+   "id": "F-01",
+   "shown": "3 chips",
+   "type": "general-knowledge",
+   "status": "manual",
+   "computed": "-",
+   "reason": "Context statement, not a repo output."
+  },
+  {
+   "id": "F-02",
+   "shown": "4 problem cards",
+   "type": "general-knowledge",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-03",
+   "shown": "341,880 orders",
+   "type": "direct",
+   "computed": "341,880",
+   "expect": "341,880",
+   "status": "pass"
+  },
+  {
+   "id": "F-04",
+   "shown": "2 years / 2024\u20132025",
+   "type": "direct",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-05",
+   "shown": "48%",
+   "type": "derived",
+   "computed": "48%",
+   "expect": "48%",
+   "status": "pass"
+  },
+  {
+   "id": "F-06",
+   "shown": "Five ways each one can end / 5 ways it could end",
+   "type": "direct",
+   "computed": "5",
+   "expect": "5",
+   "status": "pass"
+  },
+  {
+   "id": "F-07",
+   "shown": "~470 orders a day",
+   "type": "derived",
+   "computed": "~470",
+   "expect": "~470",
+   "status": "pass"
+  },
+  {
+   "id": "F-08",
+   "shown": "6 delivery zones, 2 remote",
+   "type": "direct",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-09",
+   "shown": "1 in 5 orders is not delivered",
+   "type": "derived",
+   "computed": "1 in 5",
+   "expect": "1 in 5",
+   "status": "pass"
+  },
+  {
+   "id": "F-10",
+   "shown": "scored as cash and as card",
+   "type": "direct",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-11",
+   "shown": "daily margin / cash rules / beats risk rule",
+   "type": "derived",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-12",
+   "shown": "CALIBRATE \u00b7 make the odds honest",
+   "type": "direct",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-13",
+   "shown": "+22,258",
+   "type": "direct",
+   "computed": "+22,258",
+   "expect": "+22,258",
+   "status": "pass"
+  },
+  {
+   "id": "F-14",
+   "shown": "\u22122,113",
+   "type": "direct",
+   "computed": "-2,113",
+   "expect": "-2,113",
+   "status": "pass"
+  },
+  {
+   "id": "F-15",
+   "shown": "config.py, generate.py, features.py, models.py, calibration.py, economics.py, policy.py, pipeline.py, data/truth",
+   "type": "direct",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-16",
+   "shown": "23 columns",
+   "type": "direct",
+   "computed": "23",
+   "expect": "23",
+   "status": "pass"
+  },
+  {
+   "id": "F-17",
+   "shown": "history \u226514 d old",
+   "type": "direct",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-18",
+   "shown": "186 rounds",
+   "type": "direct",
+   "computed": "186",
+   "expect": "186",
+   "status": "pass"
+  },
+  {
+   "id": "F-19",
+   "shown": "\u00d7 5 trees / 5-outcome softmax",
+   "type": "derived",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-20",
+   "shown": "fit May\u2013Aug 25",
+   "type": "direct",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-21",
+   "shown": "40% / 60% \u00b7 assumed input",
+   "type": "direct",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-22",
+   "shown": "72.8 s",
+   "type": "direct",
+   "computed": "72.8 s",
+   "expect": "72.8 s",
+   "status": "pass"
+  },
+  {
+   "id": "F-23",
+   "shown": "73,024 orders",
+   "type": "direct",
+   "computed": "73,024",
+   "expect": "73,024",
+   "status": "pass"
+  },
+  {
+   "id": "F-24",
+   "shown": "log-loss \u00b7 classwise ECE \u00b7 daily margin error \u00b7 COD policy on true p \u00b7 bootstrap 95% CI",
+   "type": "direct",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-25",
+   "shown": "4 date windows \u00b7 train \u00b7 stop \u00b7 calib \u00b7 test",
+   "type": "direct",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-26",
+   "shown": "expected vs realized daily margin (image)",
+   "type": "direct",
+   "status": "manual",
+   "computed": "-",
+   "reason": "Image of the repo's own figure, colour-inverted to dark; legend redrawn because the original legend was painted over."
+  },
+  {
+   "id": "F-27",
+   "shown": "122 test days",
+   "type": "direct",
+   "computed": "122",
+   "expect": "122",
+   "status": "pass"
+  },
+  {
+   "id": "F-28",
+   "shown": "22.5%",
+   "type": "direct",
+   "computed": "22.5%",
+   "expect": "22.5%",
+   "status": "pass"
+  },
+  {
+   "id": "F-29",
+   "shown": "4.3%",
+   "type": "direct",
+   "computed": "4.3%",
+   "expect": "4.3%",
+   "status": "pass"
+  },
+  {
+   "id": "F-30",
+   "shown": "Class weighting forecasts a loss every day.",
+   "type": "direct",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-31",
+   "shown": "margin gained against orders lost (image)",
+   "type": "direct",
+   "status": "manual",
+   "computed": "-",
+   "reason": "Image of the repo's own figure, colour-inverted to dark, then zoomed 1.7x towards the top band; legend redrawn on the right."
+  },
+  {
+   "id": "F-32",
+   "shown": "\u2212509,868",
+   "type": "direct",
+   "computed": "-509,868",
+   "expect": "-509,868",
+   "status": "pass"
+  },
+  {
+   "id": "F-33",
+   "shown": "14,469 orders lost",
+   "type": "direct",
+   "computed": "14,469",
+   "expect": "14,469",
+   "status": "pass"
+  },
+  {
+   "id": "F-34",
+   "shown": "15.5% of COD hidden",
+   "type": "direct",
+   "computed": "15.5%",
+   "expect": "15.5%",
+   "status": "pass"
+  },
+  {
+   "id": "F-35",
+   "shown": "35,389 COD orders",
+   "type": "direct",
+   "computed": "35,389",
+   "expect": "35,389",
+   "status": "pass"
+  },
+  {
+   "id": "F-36",
+   "shown": "Risk score \u00b7 same block rate",
+   "type": "direct",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-37",
+   "shown": "SALE WEEK \u00b7 2025-11-24",
+   "type": "direct",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-38",
+   "shown": "609 COD orders (6 rows + 603 more)",
+   "type": "direct",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-39",
+   "shown": "102 of 609 COD orders hide COD \u00b7 507 keep it",
+   "type": "direct",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-40",
+   "shown": "+602 margin that day",
+   "type": "direct",
+   "computed": "+602",
+   "expect": "+602",
+   "status": "pass"
+  },
+  {
+   "id": "F-41",
+   "shown": "315400, 316055, 316096, 316229, 315744, 316309",
+   "type": "direct",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-42",
+   "shown": "(consistency check, not on screen)",
+   "type": "derived",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-43",
+   "shown": "+ 603 more COD orders",
+   "type": "derived",
+   "computed": "603",
+   "expect": "603",
+   "status": "pass"
+  },
+  {
+   "id": "F-44",
+   "shown": "63%",
+   "type": "derived",
+   "computed": "63%",
+   "expect": "63%",
+   "status": "pass"
+  },
+  {
+   "id": "F-45",
+   "shown": "true p ceiling: +35,479",
+   "type": "direct",
+   "computed": "+35,479",
+   "expect": "+35,479",
+   "status": "pass"
+  },
+  {
+   "id": "F-46",
+   "shown": "+24,371",
+   "type": "direct",
+   "computed": "+24,371",
+   "expect": "+24,371",
+   "status": "pass"
+  },
+  {
+   "id": "F-47",
+   "shown": "95% CI 21,580 to 27,556",
+   "type": "direct",
+   "computed": "21,580 to 27,556",
+   "expect": "21,580 to 27,556",
+   "status": "pass"
+  },
+  {
+   "id": "F-48",
+   "shown": "0.7442",
+   "type": "direct",
+   "computed": "0.7442",
+   "expect": "0.7442",
+   "status": "pass"
+  },
+  {
+   "id": "F-49",
+   "shown": "0.6475",
+   "type": "direct",
+   "computed": "0.6475",
+   "expect": "0.6475",
+   "status": "pass"
+  },
+  {
+   "id": "F-50",
+   "shown": "0.6469",
+   "type": "direct",
+   "computed": "0.6469",
+   "expect": "0.6469",
+   "status": "pass"
+  },
+  {
+   "id": "F-51",
+   "shown": "0.6478",
+   "type": "direct",
+   "computed": "0.6478",
+   "expect": "0.6478",
+   "status": "pass"
+  },
+  {
+   "id": "F-52",
+   "shown": "0.6181",
+   "type": "direct",
+   "computed": "0.6181",
+   "expect": "0.6181",
+   "status": "pass"
+  },
+  {
+   "id": "F-53",
+   "shown": "macro-F1 0.290 / 0.294",
+   "type": "direct",
+   "computed": "0.290 / 0.294",
+   "expect": "0.290 / 0.294",
+   "status": "pass"
+  },
+  {
+   "id": "F-54",
+   "shown": "ECE 0.0027 \u2192 0.0035",
+   "type": "direct",
+   "computed": "0.0027 -> 0.0035",
+   "expect": "0.0027 -> 0.0035",
+   "status": "pass"
+  },
+  {
+   "id": "F-55",
+   "shown": "ECE 0.206 \u2192 0.009",
+   "type": "direct",
+   "computed": "0.206 -> 0.009",
+   "expect": "0.206 -> 0.009",
+   "status": "pass"
+  },
+  {
+   "id": "F-56",
+   "shown": "bars 6 / 767 / 772 / 764 / 1000 px",
+   "type": "derived",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-57",
+   "shown": "MIT",
+   "type": "direct",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-58",
+   "shown": "about 2 min",
+   "type": "direct",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-59",
+   "shown": "LightGBM \u00b7 scikit-learn \u00b7 pandas \u00b7 Python",
+   "type": "direct",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-60",
+   "shown": "$ make run",
+   "type": "direct",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  }
+ ]
+}

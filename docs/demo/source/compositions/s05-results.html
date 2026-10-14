@@ -1,0 +1,85 @@
+<!doctype html>
+<html>
+  <head><meta charset="UTF-8" /></head>
+  <body>
+    <template>
+      <style>
+        #results-root { position: absolute; inset: 0; }
+        #results-root .eyebrow { color: var(--c-eval); }
+        #results-root .cards { position: absolute; left: 120px; top: 290px; width: 1680px; display: flex; gap: 30px; }
+        #results-root .card {
+          position: relative; flex: 1 1 0; height: 500px; border-radius: 16px; border: 2px solid var(--line);
+          background: var(--panel); padding: 44px 34px 36px; display: flex; flex-direction: column; overflow: hidden;
+        }
+        #results-root .card .bar { position: absolute; left: 0; top: 0; width: 100%; height: 6px; }
+        #results-root .card .layer { font-family: var(--mono); font-size: 20px; letter-spacing: 0.12em; text-transform: uppercase; }
+        #results-root .card .big {
+          margin-top: 18px; font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 84px;
+          font-weight: 700; letter-spacing: -0.05em; line-height: 1; white-space: nowrap;
+        }
+        #results-root .card .lab { margin-top: 22px; font-size: 32px; font-weight: 700; line-height: 1.2; color: var(--ink); }
+        #results-root .mini { position: relative; margin-top: 26px; width: 100%; height: 12px; border-radius: 6px; background: rgba(178, 191, 204, 0.16); }
+        #results-root .mini-fill { position: absolute; left: 0; top: 0; width: 100%; height: 12px; border-radius: 6px; transform-origin: left center; }
+        #results-root .card .foot {
+          margin-top: auto; padding-top: 18px; border-top: 2px solid var(--line);
+          font-family: var(--mono); font-size: 22px; color: var(--ink-soft); white-space: nowrap;
+        }
+        #results-root .opt .bar, #results-root .opt .mini-fill { background: var(--c-opt); }
+        #results-root .opt .big, #results-root .opt .layer { color: var(--c-opt); }
+        #results-root .mod .bar, #results-root .mod .mini-fill { background: var(--c-model); }
+        #results-root .mod .big, #results-root .mod .layer { color: var(--c-model); }
+        #results-root .ev .bar, #results-root .ev .mini-fill { background: var(--c-eval); }
+        #results-root .ev .big, #results-root .ev .layer { color: var(--c-eval); }
+        #results-root .footnote { position: absolute; left: 120px; top: 840px; font-family: var(--mono); font-size: 24px; color: var(--ink-mute); }
+      </style>
+      <div id="results-root" data-composition-id="results" data-width="1920" data-height="1080">
+        <div class="scene" id="results-in">
+          <div class="eyebrow" data-layout-allow-overlap id="results-eyebrow">08 · Results · test window Sep–Dec 2025</div>
+          <div class="scene-title" data-layout-allow-overlap id="results-title">Margin earned on COD, and a forecast that holds in sale week.</div>
+          <div class="cards">
+            <div class="card opt" id="results-c1"><div class="bar"></div><div class="layer">decision</div>
+              <div class="big" id="results-v1">+0</div><div class="lab">margin, COD margin rule</div>
+              <div class="mini"><div class="mini-fill" id="results-m1"></div></div><div class="foot">risk score: −2,113</div></div>
+            <div class="card opt" id="results-c2"><div class="bar"></div><div class="layer">decision</div>
+              <div class="big" id="results-v2">0%</div><div class="lab">of the gain a perfect model gets</div>
+              <div class="mini"><div class="mini-fill" id="results-m2"></div></div><div class="foot">true p ceiling: +35,479</div></div>
+            <div class="card mod" id="results-c3"><div class="bar"></div><div class="layer">forecast</div>
+              <div class="big" id="results-v3">22.5%</div><div class="lab">daily margin error, sale days</div>
+              <div class="mini"><div class="mini-fill" id="results-m3"></div></div><div class="foot">flat class rates: 22.5%</div></div>
+            <div class="card ev" id="results-c4"><div class="bar"></div><div class="layer">evaluation</div>
+              <div class="big" id="results-v4">+0</div><div class="lab">margin rule minus risk rule</div>
+              <div class="mini"><div class="mini-fill" id="results-m4"></div></div><div class="foot">95% CI 21,580 to 27,556</div></div>
+          </div>
+          <div class="footnote" id="results-foot">73,024 test orders · 35,389 paid by COD · every policy scored on the generator's true probabilities</div>
+        </div>
+      </div>
+      <script>
+        (() => {
+          const tl = gsap.timeline({ paused: true });
+          const D = 8.8;
+          tl.fromTo("#results-in", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 0);
+          tl.fromTo("#results-eyebrow", { opacity: 0, x: -24 }, { opacity: 1, x: 0, duration: 0.5, ease: "power2.out" }, 0.1);
+          tl.fromTo("#results-title", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.7, ease: "power3.out" }, 0.2);
+          const num = (v, d, sign) => (sign && v >= 0 ? "+" : "") + v.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
+          const stats = [
+            { v: "results-v1", m: "#results-m1", from: 0, to: 22258, d: 0, sign: true, suf: "", r0: 0, r: 22258 / 35479 },
+            { v: "results-v2", m: "#results-m2", from: 0, to: 63, d: 0, sign: false, suf: "%", r0: 0, r: 22258 / 35479 },
+            { v: "results-v3", m: "#results-m3", from: 22.5, to: 4.3, d: 1, sign: false, suf: "%", r0: 1, r: 4.3 / 22.5 },
+            { v: "results-v4", m: "#results-m4", from: 0, to: 24371, d: 0, sign: true, suf: "", r0: 0, r: 1 },
+          ];
+          stats.forEach((s, i) => {
+            const at = 0.7 + i * 0.16;
+            tl.fromTo("#results-c" + (i + 1), { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, at);
+            const o = { v: s.from };
+            const el = document.getElementById(s.v);
+            tl.to(o, { v: s.to, duration: 1.6, ease: "power3.out", onUpdate: () => { el.textContent = num(o.v, s.d, s.sign) + s.suf; } }, at + 0.3);
+            tl.fromTo(s.m, { scaleX: s.r0 }, { scaleX: s.r, duration: 1.6, ease: "power3.out" }, at + 0.3);
+          });
+          tl.fromTo("#results-foot", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 2.8);
+          tl.to("#results-in", { opacity: 0, duration: 0.4, ease: "power2.in" }, D - 0.4);
+          window.__timelines["results"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

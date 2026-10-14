@@ -1,0 +1,273 @@
+<!doctype html>
+<html>
+  <head><meta charset="UTF-8" /></head>
+  <body>
+    <template>
+      <style>
+        #arch-root { position: absolute; inset: 0; }
+        #arch-root .diagram { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+        #arch-root svg.wires { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: visible; }
+        #arch-root .node { position: absolute; }
+        #arch-root .node svg.shape { position: absolute; left: 0; top: 0; overflow: visible; }
+        #arch-root .node .body {
+          position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: 14px 18px 0;
+        }
+        #arch-root .node .t { font-size: 26px; font-weight: 700; letter-spacing: -0.01em; color: var(--ink); white-space: nowrap; line-height: 1.15; }
+        #arch-root .node .s { font-family: var(--mono); font-size: 20px; color: var(--ink-soft); white-space: nowrap; line-height: 1.2; }
+        #arch-root .node .f {
+          position: absolute; right: 12px; top: -15px; font-family: var(--mono); font-size: 20px; padding: 1px 9px;
+          border-radius: 6px; background: var(--bg); border: 2px solid var(--line); white-space: nowrap; line-height: 1.3;
+        }
+        #arch-root .node.ghost .t { color: var(--ink-soft); }
+        #arch-root .node.cyl .body { padding-top: 26px; }
+        #arch-root .node.diamond .body { align-items: center; padding: 0; }
+        #arch-root .node.diamond .t { font-family: var(--mono); font-size: 26px; }
+        #arch-root .node.diamond .s { color: var(--c-opt); }
+        #arch-root .node.lane .body { padding: 14px 26px 0; }
+        #arch-root .hdr {
+          position: absolute; top: 240px; font-family: var(--mono); font-size: 20px; font-weight: 700; letter-spacing: 0.14em;
+          white-space: nowrap;
+        }
+        #arch-root .wl {
+          position: absolute; font-family: var(--mono); font-size: 20px; line-height: 24px; height: 24px; white-space: nowrap;
+          padding: 0 6px; border-radius: 5px; background: rgba(10, 17, 25, 0.92);
+        }
+        #arch-root .legend {
+          position: absolute; left: 120px; top: 918px; width: 1680px; display: flex; gap: 30px; align-items: center;
+          font-family: var(--mono); font-size: 20px; color: var(--ink-soft); white-space: nowrap;
+        }
+        #arch-root .legend span { display: flex; align-items: center; gap: 10px; }
+        #arch-root .legend svg { display: block; }
+        #arch-root .crit {
+          position: absolute; left: 120px; top: 918px; display: flex; align-items: center; gap: 16px;
+          font-family: var(--mono); font-size: 22px; color: var(--ink); white-space: nowrap;
+        }
+        #arch-root .crit b {
+          font-weight: 700; letter-spacing: 0.12em; color: var(--bg); background: var(--c-opt); padding: 3px 12px; border-radius: 6px;
+        }
+      </style>
+
+      <div id="arch-root" data-composition-id="arch" data-width="1920" data-height="1080">
+        <div class="scene" id="arch-in">
+          <div class="eyebrow" data-layout-allow-overlap id="arch-eyebrow">05 · Architecture</div>
+          <div class="scene-title" data-layout-allow-overlap id="arch-title">Probabilities in, money out: one decision per cash order.</div>
+          <div class="diagram" id="arch-diagram">
+            <svg class="wires" viewBox="0 0 1920 1080" id="arch-svg"></svg>
+            <div id="arch-nodes"></div>
+            <div id="arch-labels"></div>
+            <div class="legend" id="arch-legend"></div>
+            <div class="crit" id="arch-crit" data-layout-allow-overlap><b>CRITICAL PATH</b>order rows → features → LightGBM → isotonic → E[margin] → gain &gt; 0 ? → checkout</div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (() => {
+          const tl = gsap.timeline({ paused: true });
+          const D = 14.0;
+          const NS = "http://www.w3.org/2000/svg";
+          const COL = { data: "#7fa8ff", model: "#b9a2ff", opt: "#3fd8a8", eval: "#f2c46d", risk: "#ff8a73", mute: "#8494a6" };
+          const FILL = { data: "#0f1a2b", model: "#16142b", opt: "#0d2422", eval: "#211d12", risk: "#24161a", mute: "#0f1a26" };
+
+          // ---------------- layout grid (px) ----------------
+          // columns: sources | features | models | calibration | decision | consumers
+          const C = [[120, 220], [400, 230], [690, 290], [1040, 230], [1330, 240], [1630, 170]];
+          const R = { U: [284, 100], M: [430, 130], L: [606, 110], B: [776, 100] };
+          const box = (c, r) => ({ x: C[c][0], y: R[r][0], w: C[c][1], h: R[r][1] });
+
+          // ---------------- nodes: every box names a real module in src/order_margin/ ----------------
+          // kind: box | cyl (data store) | doc (config) | person (human / assumed input) | diamond (decision) | ghost (compared, not shipped) | lane
+          const N = [
+            { id: "cfg-split", col: 0, ...box(0, "U"), kind: "doc", L: "data", tag: "config.py", t: "Time split", s: ["4 date windows"] },
+            { id: "orders", col: 0, ...box(0, "M"), kind: "cyl", L: "data", tag: "generate.py", t: "Order history", s: ["341,880 orders", "2024–2025"] },
+            { id: "truth", col: 0, ...box(0, "L"), kind: "cyl", L: "eval", dashed: true, tag: "data/truth", t: "True p", s: ["scoring only"] },
+            { id: "feat", col: 1, ...box(1, "M"), kind: "box", L: "data", tag: "features.py", t: "Features", s: ["23 columns", "history ≥14 d old"] },
+            { id: "cf", col: 1, ...box(1, "L"), kind: "box", L: "data", tag: "features.py", t: "with_payment", s: ["COD → card"] },
+            { id: "gbm", col: 2, ...box(2, "M"), kind: "box", L: "model", hero: true, tag: "models.py", t: "LightGBM", s: ["5-outcome softmax", "186 rounds × 5 trees"] },
+            { id: "base", col: 2, ...box(2, "L"), kind: "ghost", L: "model", tag: "models.py", t: "Baselines", s: ["priors · logistic", "class-weighted ✗"] },
+            { id: "platt", col: 3, ...box(3, "U"), kind: "ghost", L: "model", tag: "calibration.py", t: "Platt", s: ["compared"] },
+            { id: "iso", col: 3, ...box(3, "M"), kind: "box", L: "model", tag: "calibration.py", t: "Isotonic", s: ["1-vs-rest", "fit May–Aug 25"] },
+            { id: "conv", col: 3, ...box(3, "L"), kind: "person", L: "risk", tag: "human input", t: "Card switch", s: ["40% / 60%", "assumed input"] },
+            { id: "cfg-econ", col: 4, ...box(4, "U"), kind: "doc", L: "opt", tag: "config.py", t: "Margin table", s: ["fees · shipping"] },
+            { id: "econ", col: 4, ...box(4, "M"), kind: "box", L: "opt", tag: "economics.py", t: "E[margin]", s: ["Σ p × margin", "as COD and card"] },
+            { id: "dec", col: 4, ...box(4, "L"), kind: "diamond", L: "opt", tag: null, t: "gain > 0 ?", s: ["policy.py"] },
+            { id: "runtime", col: 5, ...box(5, "U"), kind: "ghost", L: "mute", tag: "runtime", t: "72.8 s", s: ["pipeline run", "offline batch"] },
+            { id: "fin", col: 5, ...box(5, "M"), kind: "box", L: "opt", tag: "consumer", t: "Finance", s: ["margin / day"] },
+            { id: "chk", col: 5, ...box(5, "L"), kind: "box", L: "opt", tag: "consumer", t: "Checkout", s: ["COD on / off"] },
+            { id: "eval", col: 6, x: 400, y: R.B[0], w: 1170, h: R.B[1], kind: "lane", L: "eval", tag: "pipeline.py · evaluation", t: "Evaluation · test window Sep–Dec 2025 · 73,024 orders", s: ["log-loss · classwise ECE · daily margin error · COD policy on true p · bootstrap 95% CI"] },
+            { id: "out", col: 7, ...box(5, "B"), kind: "cyl", L: "eval", tag: "pipeline.py", t: "outputs/", s: ["report.md"] },
+          ];
+
+          const shapeSVG = (n) => {
+            const { w, h } = n, s = COL[n.L], f = FILL[n.L];
+            const dash = n.kind === "ghost" || n.kind === "person" || n.dashed ? ' stroke-dasharray="9 7"' : "";
+            const sw = n.hero ? 3 : 2;
+            const so = n.kind === "ghost" ? 0.55 : 0.75;
+            let d = "";
+            if (n.kind === "cyl") {
+              const e = 13;
+              d = '<path d="M0 ' + e + " A" + w / 2 + " " + e + " 0 0 1 " + w + " " + e + " V" + (h - e) + " A" + w / 2 + " " + e + " 0 0 1 0 " + (h - e) + ' Z" fill="' + f + '" stroke="' + s + '" stroke-opacity="' + so + '" stroke-width="' + sw + '"' + dash + "/>" +
+                '<path d="M0 ' + e + " A" + w / 2 + " " + e + " 0 0 0 " + w + " " + e + '" fill="none" stroke="' + s + '" stroke-opacity="' + so + '" stroke-width="' + sw + '"' + dash + "/>";
+            } else if (n.kind === "doc") {
+              const k = 22;
+              d = '<path d="M0 0 H' + (w - k) + " L" + w + " " + k + " V" + h + ' H0 Z" fill="' + f + '" stroke="' + s + '" stroke-opacity="' + so + '" stroke-width="' + sw + '"/>' +
+                '<path d="M' + (w - k) + " 0 V" + k + " H" + w + '" fill="none" stroke="' + s + '" stroke-opacity="' + so + '" stroke-width="' + sw + '"/>';
+            } else if (n.kind === "diamond") {
+              d = '<path d="M' + w / 2 + " 0 L" + w + " " + h / 2 + " L" + w / 2 + " " + h + " L0 " + h / 2 + ' Z" fill="' + f + '" stroke="' + s + '" stroke-opacity="0.9" stroke-width="3"/>';
+            } else {
+              const rx = n.kind === "person" ? 40 : 14;
+              d = '<rect x="0" y="0" width="' + w + '" height="' + h + '" rx="' + rx + '" fill="' + (n.kind === "ghost" ? "rgba(15,26,38,0.55)" : f) + '" stroke="' + s + '" stroke-opacity="' + (n.hero ? 1 : so) + '" stroke-width="' + sw + '"' + dash + "/>";
+            }
+            return '<svg class="shape" width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + " " + h + '">' + d + "</svg>";
+          };
+          const PERSON = '<svg width="16" height="16" viewBox="0 0 16 16" style="display:inline-block;vertical-align:-2px;margin-right:6px"><circle cx="8" cy="4.5" r="3.2" fill="#ff8a73"/><path d="M1.5 16v-2.5a6.5 5 0 0 1 13 0V16z" fill="#ff8a73"/></svg>';
+          const nodesEl = document.getElementById("arch-nodes");
+          nodesEl.innerHTML = N.map((n) => {
+            const glow = n.hero ? "box-shadow:0 0 36px rgba(185,162,255,0.18);border-radius:14px;" : "";
+            const body = '<div class="body"><div class="t">' + n.t.replace(">", "&gt;") + "</div>" + n.s.map((x) => '<div class="s">' + x + "</div>").join("") + "</div>";
+            const tagStyle = "color:" + COL[n.L] + ";" + (n.kind === "diamond" ? "right:auto;left:" + (n.w / 2 - 66) + "px;top:-36px;" : "");
+            const tag = n.tag ? '<div class="f" style="' + tagStyle + '">' + (n.kind === "person" ? PERSON : "") + n.tag + "</div>" : "";
+            return '<div class="node ' + n.kind + '" id="an-' + n.id + '" style="left:' + n.x + "px;top:" + n.y + "px;width:" + n.w + "px;height:" + n.h + "px;" + glow + '">' +
+              shapeSVG(n) + body + tag + "</div>";
+          }).join("");
+
+          // layer headers
+          const HDR = [["SOURCES", 0, "data"], ["FEATURES", 1, "data"], ["MODELS", 2, "model"], ["CALIBRATION", 3, "model"], ["DECISION", 4, "opt"], ["CONSUMERS", 5, "opt"]];
+          HDR.forEach(([t, c, l]) => nodesEl.insertAdjacentHTML("beforeend",
+            '<div class="hdr" id="ah-' + c + '" style="left:' + C[c][0] + "px;color:" + COL[l] + '">' + t + "</div>"));
+
+          // ---------------- wires: orthogonal point lists, labelled with what flows ----------------
+          // style: solid = batch data flow · dot = counterfactual second pass · dash = scoring only (truth never decides)
+          const W = [
+            { id: "split", pts: [[340, 335], [835, 335], [835, 430]], c: "data", step: 0, lab: ["train · stop · calib · test", 515, 309] },
+            { id: "rows", pts: [[340, 495], [400, 495]], c: "data", step: 0, crit: true, lab: ["order rows", 370, 395] },
+            { id: "x", pts: [[630, 495], [690, 495]], c: "data", step: 1, crit: true, lab: ["X · 23 cols", 660, 395] },
+            { id: "cf-in", pts: [[515, 560], [515, 606]], c: "data", step: 1, style: "dot", lab: ["COD rows", 590, 573] },
+            { id: "cf-out", pts: [[630, 661], [660, 661], [660, 525], [690, 525]], c: "data", step: 2, style: "dot", lab: ["payment = card", 752, 573] },
+            { id: "raw", pts: [[980, 495], [1040, 495]], c: "model", step: 3, crit: true, lab: ["raw p · n×5", 1010, 395] },
+            { id: "p", pts: [[1270, 495], [1330, 495]], c: "model", step: 4, crit: true, lab: ["p · sums to 1", 1300, 573] },
+            { id: "mt", pts: [[1450, 380], [1450, 430]], c: "opt", step: 4, lab: ["margin per outcome", 1334, 395] },
+            { id: "em", pts: [[1450, 560], [1450, 606]], c: "opt", step: 5, crit: true, lab: ["E[cod] · E[card]", 1556, 573] },
+            { id: "conv", pts: [[1270, 661], [1330, 661]], c: "risk", step: 5, lab: ["conv", 1300, 628] },
+            { id: "day", pts: [[1570, 495], [1630, 495]], c: "opt", step: 5, lab: ["margin / day", 1600, 395] },
+            { id: "yes", pts: [[1570, 661], [1630, 661]], c: "opt", step: 6, crit: true, lab: ["yes: hide COD", 1600, 730] },
+            { id: "tap", pts: [[1450, 716], [1450, 776]], c: "eval", step: 6, style: "dash", lab: null },
+            { id: "truth", pts: [[230, 716], [230, 826], [400, 826]], c: "eval", step: 6, style: "dash", lab: ["true p only", 318, 792] },
+            { id: "res", pts: [[1570, 826], [1630, 826]], c: "eval", step: 7, lab: null },
+          ];
+          const svg = document.getElementById("arch-svg");
+          const mk = (tag, attrs, parent) => {
+            const e = document.createElementNS(NS, tag);
+            Object.entries(attrs).forEach(([k, v]) => e.setAttribute(k, v));
+            (parent || svg).appendChild(e);
+            return e;
+          };
+          const lenOf = (pts) => pts.slice(1).reduce((s, p, i) => s + Math.hypot(p[0] - pts[i][0], p[1] - pts[i][1]), 0);
+          const labelsEl = document.getElementById("arch-labels");
+          W.forEach((w) => {
+            const d = "M" + w.pts.map((q) => q.join(" ")).join(" L");
+            w.len = lenOf(w.pts);
+            w.glow = mk("path", { d, fill: "none", stroke: COL[w.c], "stroke-width": 14, "stroke-linejoin": "round", opacity: 0 });
+            const a = { d, fill: "none", stroke: COL[w.c], "stroke-width": 3.5, "stroke-linejoin": "round", id: "aw-" + w.id };
+            if (w.style === "dot") Object.assign(a, { "stroke-dasharray": "2 8", "stroke-linecap": "round", "stroke-width": 4, opacity: 0 });
+            else if (w.style === "dash") Object.assign(a, { "stroke-dasharray": "10 8", opacity: 0 });
+            else Object.assign(a, { "stroke-dasharray": w.len + " " + w.len, "stroke-dashoffset": w.len, opacity: 0.85 });
+            w.el = mk("path", a);
+            // arrowhead at the end, oriented along the last segment
+            const [p, q] = [w.pts[w.pts.length - 2], w.pts[w.pts.length - 1]];
+            const ang = (Math.atan2(q[1] - p[1], q[0] - p[0]) * 180) / Math.PI;
+            w.head = mk("path", { d: "M0 0 L-13 -7 L-13 7 Z", fill: COL[w.c], transform: "translate(" + q[0] + " " + q[1] + ") rotate(" + ang + ")", opacity: 0 });
+            if (w.lab) {
+              // centre the label on its anchor x (JetBrains Mono 20px = 12 px per char, plus 12 px padding)
+              const left = w.lab[1] - (w.lab[0].length * 12 + 12) / 2;
+              labelsEl.insertAdjacentHTML("beforeend", '<div class="wl" id="al-' + w.id + '" style="color:' + COL[w.c] + ";left:" + left + "px;top:" + w.lab[2] + 'px">' + w.lab[0] + "</div>");
+            }
+          });
+          // fallback branch: no -> keep COD (the default)
+          labelsEl.insertAdjacentHTML("beforeend", '<div class="wl" id="al-no" style="color:#b2bfcc;left:1150px;top:730px">no: keep COD (default)</div>');
+
+          // legend: shapes and line styles
+          const LG = [
+            ['<svg width="30" height="24"><path d="M1 6 A14 5 0 0 1 29 6 V18 A14 5 0 0 1 1 18 Z" fill="none" stroke="#7fa8ff" stroke-width="2"/><path d="M1 6 A14 5 0 0 0 29 6" fill="none" stroke="#7fa8ff" stroke-width="2"/></svg>', "data store"],
+            ['<svg width="24" height="24"><path d="M1 1 H16 L23 8 V23 H1 Z" fill="none" stroke="#7fa8ff" stroke-width="2"/></svg>', "config"],
+            ['<svg width="26" height="24"><path d="M13 1 L25 12 L13 23 L1 12 Z" fill="none" stroke="#3fd8a8" stroke-width="2"/></svg>', "decision"],
+            ['<svg width="30" height="24"><rect x="1" y="3" width="28" height="18" rx="9" fill="none" stroke="#ff8a73" stroke-width="2" stroke-dasharray="5 4"/></svg>', "human input"],
+            ['<svg width="30" height="24"><rect x="1" y="3" width="28" height="18" rx="4" fill="none" stroke="#8494a6" stroke-width="2" stroke-dasharray="5 4"/></svg>', "compared, not shipped"],
+            ['<svg width="40" height="24"><path d="M1 12 H39" stroke="#b2bfcc" stroke-width="3"/></svg>', "batch flow"],
+            ['<svg width="40" height="24"><path d="M2 12 H39" stroke="#b2bfcc" stroke-width="4" stroke-dasharray="2 7" stroke-linecap="round"/></svg>', "2nd pass, as card"],
+            ['<svg width="40" height="24"><path d="M1 12 H39" stroke="#f2c46d" stroke-width="3" stroke-dasharray="8 6"/></svg>', "scoring only"],
+          ];
+          document.getElementById("arch-legend").innerHTML = LG.map(([i, t]) => "<span>" + i + t + "</span>").join("");
+
+          // ---------------- phase 1: build layer by layer ----------------
+          tl.fromTo("#arch-in", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 0);
+          tl.fromTo("#arch-eyebrow", { opacity: 0, x: -24 }, { opacity: 1, x: 0, duration: 0.5, ease: "power2.out" }, 0.1);
+          tl.fromTo("#arch-title", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.7, ease: "power3.out" }, 0.2);
+          const COLT = [0.7, 1.5, 2.3, 3.1, 3.9, 4.7, 5.3, 5.7]; // column / lane reveal times
+          HDR.forEach(([, c]) => tl.fromTo("#ah-" + c, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" }, COLT[c]));
+          const rowOf = (n) => (n.y === R.U[0] ? 0 : n.y === R.M[0] ? 1 : 2);
+          N.forEach((n) =>
+            tl.fromTo("#an-" + n.id, { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, COLT[n.col] + 0.1 + rowOf(n) * 0.12));
+          // a wire appears when its target layer appears
+          const TARGET_COL = { split: 2, rows: 1, x: 2, "cf-in": 1, "cf-out": 2, raw: 3, p: 4, mt: 4, em: 4, conv: 4, day: 5, yes: 5, tap: 6, truth: 6, res: 7 };
+          W.forEach((w) => {
+            const at = COLT[TARGET_COL[w.id]] + 0.15;
+            const dur = Math.max(0.35, w.len / 1000);
+            if (w.style) tl.fromTo(w.el, { attr: { opacity: 0 } }, { attr: { opacity: 0.9 }, duration: 0.4 }, at);
+            else tl.fromTo(w.el, { attr: { "stroke-dashoffset": w.len } }, { attr: { "stroke-dashoffset": 0 }, duration: dur, ease: "power2.inOut" }, at);
+            const end = at + (w.style ? 0.3 : dur - 0.05);
+            tl.fromTo(w.head, { attr: { opacity: 0 } }, { attr: { opacity: 1 }, duration: 0.15 }, end);
+            if (w.lab) tl.fromTo("#al-" + w.id, { opacity: 0 }, { opacity: 1, duration: 0.35 }, end);
+          });
+          tl.fromTo("#al-no", { opacity: 0 }, { opacity: 1, duration: 0.35 }, COLT[4] + 0.6);
+          tl.fromTo("#arch-legend", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 6.1);
+
+          // ---------------- phase 2: data packets in execution order ----------------
+          const FLOW0 = 6.6, STEP = 0.6, SPEED = 420;
+          W.forEach((w) => {
+            const pts = w.pts, travel = Math.max(0.35, w.len / SPEED);
+            const kf = [];
+            for (let i = 1; i < pts.length; i++) {
+              const seg = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+              kf.push({ attr: { cx: pts[i][0], cy: pts[i][1] }, duration: (travel * seg) / w.len, ease: "none" });
+            }
+            // wave 0: every wire in execution order; wave 1: critical path only, during the highlight
+            const waves = w.crit ? [0, 1] : [0];
+            waves.forEach((k) => {
+              const c = mk("circle", { r: k ? 9 : 7, cx: pts[0][0], cy: pts[0][1], fill: k ? "#eef2f6" : COL[w.c], opacity: 0 });
+              const start = k ? 11.7 + w.step * 0.28 : FLOW0 + w.step * STEP;
+              tl.fromTo(c, { attr: { opacity: 0, cx: pts[0][0], cy: pts[0][1] } }, { attr: { opacity: 1 }, duration: 0.1 }, start);
+              tl.to(c, { keyframes: kf }, start);
+              tl.to(c, { attr: { opacity: 0 }, duration: 0.12 }, start + travel);
+            });
+          });
+          // target nodes pulse as the first wave arrives (execution order)
+          const PULSE = [["feat", 0], ["gbm", 1], ["cf", 1], ["iso", 3], ["econ", 4], ["dec", 5], ["fin", 5], ["chk", 6], ["eval", 6], ["out", 7]];
+          PULSE.forEach(([id, s]) => {
+            const at = FLOW0 + s * STEP + 0.3;
+            tl.fromTo("#an-" + id, { scale: 1 }, { scale: 1.035, duration: 0.18, ease: "power2.out", yoyo: true, repeat: 1 }, at);
+          });
+
+          // ---------------- phase 3: the critical path ----------------
+          const H = 11.3;
+          const critNodes = ["orders", "feat", "gbm", "iso", "econ", "dec", "chk"];
+          N.filter((n) => !critNodes.includes(n.id)).forEach((n) => tl.to("#an-" + n.id, { opacity: 0.3, duration: 0.5, ease: "power2.inOut" }, H));
+          W.filter((w) => !w.crit).forEach((w) => {
+            tl.to(w.el, { attr: { opacity: 0.2 }, duration: 0.5 }, H);
+            tl.to(w.head, { attr: { opacity: 0.2 }, duration: 0.5 }, H);
+            if (w.lab) tl.to("#al-" + w.id, { opacity: 0.3, duration: 0.5 }, H);
+          });
+          tl.to(["#al-no", ...HDR.map(([, c]) => "#ah-" + c)], { opacity: 0.4, duration: 0.5 }, H);
+          W.filter((w) => w.crit).forEach((w) => {
+            tl.to(w.el, { attr: { "stroke-width": 6, opacity: 1 }, duration: 0.5 }, H);
+            tl.fromTo(w.glow, { attr: { opacity: 0 } }, { attr: { opacity: 0.22 }, duration: 0.5 }, H);
+          });
+          tl.to("#arch-legend", { opacity: 0, duration: 0.3 }, H);
+          tl.fromTo("#arch-crit", { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.5, ease: "power3.out" }, H + 0.2);
+          tl.to("#arch-in", { opacity: 0, duration: 0.4, ease: "power2.in" }, D - 0.4);
+          window.__timelines["arch"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

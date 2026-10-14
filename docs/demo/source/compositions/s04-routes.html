@@ -1,0 +1,134 @@
+<!doctype html>
+<html>
+  <head><meta charset="UTF-8" /></head>
+  <body>
+    <template>
+      <style>
+        #routes-root { position: absolute; inset: 0; }
+        #routes-root .frame {
+          position: absolute; border-radius: 14px; border: 2px solid var(--line); overflow: hidden; background: #0b1722;
+        }
+        #routes-root .frame img { display: block; }
+        #routes-root .daily { left: 120px; top: 232px; width: 1684px; height: 519px; }
+        #routes-root .daily img { width: 1680px; height: 515px; }
+        #routes-root .sale {
+          position: absolute; left: 1238px; top: 236px; width: 116px; height: 470px; border: 3px dashed var(--c-eval); border-radius: 10px;
+        }
+        #routes-root .sale-lab {
+          position: absolute; left: 1150px; top: 196px; width: 292px; text-align: center; font-family: var(--mono); font-size: 22px;
+          font-weight: 700; color: var(--c-eval); letter-spacing: 0.08em;
+        }
+        #routes-root .keys { position: absolute; left: 120px; top: 772px; display: flex; gap: 34px; font-family: var(--mono); font-size: 22px; color: var(--ink-soft); }
+        #routes-root .keys span { display: flex; align-items: center; gap: 12px; white-space: nowrap; }
+        #routes-root .keys i { display: block; width: 34px; height: 5px; border-radius: 3px; }
+        #routes-root .call {
+          position: absolute; left: 120px; top: 838px; width: 1680px; padding: 20px 28px; border-radius: 12px;
+          border: 2px solid rgba(242, 196, 109, 0.5); background: rgba(242, 196, 109, 0.07);
+          font-size: 30px; line-height: 1.35; color: var(--ink);
+        }
+        #routes-root .call b { font-family: var(--mono); color: var(--c-eval); }
+        #routes-root .call b.ok { color: #6ea8ff; }
+        /* phase B */
+        #routes-root .front { left: 120px; top: 232px; width: 1064px; height: 604px; }
+        #routes-root .front img { width: 1060px; height: 600px; transform-origin: 720px 50px; }
+        #routes-root .axis { position: absolute; left: 120px; top: 852px; width: 1064px; font-family: var(--mono); font-size: 22px; color: var(--ink-mute); }
+        #routes-root .panel { position: absolute; left: 1240px; top: 232px; width: 560px; }
+        #routes-root .lg { display: flex; flex-direction: column; gap: 12px; font-family: var(--mono); font-size: 22px; color: var(--ink-soft); }
+        #routes-root .lg span { display: flex; align-items: center; gap: 14px; white-space: nowrap; }
+        #routes-root .lg i { display: block; width: 34px; height: 5px; border-radius: 3px; }
+        #routes-root .pol { margin-top: 34px; display: flex; flex-direction: column; gap: 16px; }
+        #routes-root .prow {
+          display: flex; justify-content: space-between; align-items: center; padding: 18px 22px; border-radius: 12px;
+          border: 2px solid var(--line); background: var(--panel);
+        }
+        #routes-root .prow .n { font-size: 26px; font-weight: 700; color: var(--ink); line-height: 1.2; }
+        #routes-root .prow .n small { display: block; font-family: var(--mono); font-size: 20px; font-weight: 400; color: var(--ink-mute); }
+        #routes-root .prow .v { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 38px; font-weight: 700; white-space: nowrap; }
+        #routes-root .prow.win { border-color: rgba(63, 216, 168, 0.7); background: #0f2629; }
+        #routes-root .prow.win .v { color: var(--c-opt); }
+        #routes-root .prow.risk .v { color: var(--c-risk); }
+        #routes-root .prow.all .v { color: var(--ink-mute); }
+        #routes-root .pnote { margin-top: 26px; font-size: 26px; line-height: 1.4; color: var(--ink-soft); }
+      </style>
+
+      <div id="routes-root" data-composition-id="routes" data-width="1920" data-height="1080">
+        <div class="scene" id="routes-in">
+          <div class="eyebrow" data-layout-allow-overlap id="routes-eyebrow">06 · The system running</div>
+          <div class="scene-title" data-layout-allow-overlap id="routes-title">122 test days: the margin each model expected, against what landed.</div>
+          <div class="scene-title" data-layout-allow-overlap id="routes-title-b">Blocking COD: margin gained against orders lost.</div>
+
+          <!-- phase A: daily margin, outputs/daily_margin.png -->
+          <div id="routes-a">
+            <div class="frame daily" id="routes-daily"><img src="assets/plot-daily.png" alt="expected vs realized daily margin" id="routes-img-d" data-layout-allow-overflow /></div>
+            <div class="sale" id="routes-sale" data-layout-allow-overlap></div>
+            <div class="sale-lab" id="routes-sale-lab" data-layout-allow-overlap>SALE WEEK</div>
+            <div class="keys" id="routes-keys">
+              <span><i style="background: #ffffff"></i>realized</span>
+              <span><i style="background: #2f6fe0"></i>LightGBM + isotonic</span>
+              <span><i style="background: #5cc98a"></i>flat class rates</span>
+              <span><i style="background: #d4506a"></i>class-weighted LightGBM</span>
+            </div>
+            <div class="call" id="routes-call">Sale days: flat class rates miss the day's margin by <b>22.5%</b>, LightGBM + isotonic by <b class="ok">4.3%</b>. Class weighting forecasts a loss every day.</div>
+          </div>
+
+          <!-- phase B: COD policy frontier, outputs/policy_frontier.png -->
+          <div id="routes-b">
+            <div class="frame front" id="routes-front"><img src="assets/plot-frontier.png" alt="COD policy frontier" id="routes-img-f" data-layout-allow-overflow /></div>
+            <div class="axis" id="routes-axis">x: orders lost (log) · y: margin change · 35,389 COD orders</div>
+            <div class="panel" id="routes-panel">
+              <div class="lg">
+                <span><i style="background: #2f6fe0"></i>rank by margin gain (model)</span>
+                <span><i style="background: #d4506a"></i>rank by risk score</span>
+                <span><i style="background: #5cc98a"></i>rank by margin gain (true p)</span>
+              </div>
+              <div class="pol">
+                <div class="prow win" id="routes-p1"><div class="n">Margin rule<small>15.5% of COD hidden</small></div><div class="v" id="routes-v1">+0</div></div>
+                <div class="prow risk" id="routes-p2"><div class="n">Risk score<small>same block rate</small></div><div class="v" id="routes-v2">0</div></div>
+                <div class="prow all" id="routes-p3"><div class="n">Block every COD<small>14,469 orders lost</small></div><div class="v" id="routes-v3">0</div></div>
+              </div>
+              <div class="pnote" id="routes-note">Decided by LightGBM + isotonic, scored on the generator's true probabilities.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (() => {
+          const tl = gsap.timeline({ paused: true });
+          const D = 14.6;
+          const fmt = (v) => (v >= 0 ? "+" : "−") + Math.abs(Math.round(v)).toLocaleString("en-US");
+          tl.fromTo("#routes-in", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 0);
+          tl.fromTo("#routes-eyebrow", { opacity: 0, x: -24 }, { opacity: 1, x: 0, duration: 0.5, ease: "power2.out" }, 0.1);
+          tl.fromTo("#routes-title", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.7, ease: "power3.out" }, 0.2);
+          // phase A: the 122 days draw in left to right
+          tl.fromTo("#routes-daily", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 0.5);
+          tl.fromTo("#routes-img-d", { clipPath: "inset(0px 100% 0px 0px)" }, { clipPath: "inset(0px 0% 0px 0px)", duration: 3.0, ease: "power1.inOut" }, 0.6);
+          tl.fromTo("#routes-keys", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, 1.0);
+          tl.fromTo(["#routes-sale", "#routes-sale-lab"], { opacity: 0 }, { opacity: 1, duration: 0.5 }, 3.2);
+          tl.fromTo("#routes-sale", { scale: 1 }, { scale: 1.04, duration: 0.5, ease: "sine.inOut", yoyo: true, repeat: 3 }, 3.4);
+          tl.fromTo("#routes-call", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, 3.8);
+          // phase B: the COD policy
+          const P2 = 7.2;
+          tl.to(["#routes-a", "#routes-title"], { opacity: 0, duration: 0.4, ease: "power2.in" }, P2 - 0.4);
+          tl.fromTo("#routes-title-b", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, P2 + 0.05);
+          tl.fromTo("#routes-front", { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: 0.6, ease: "power3.out" }, P2);
+          tl.fromTo("#routes-axis", { opacity: 0 }, { opacity: 1, duration: 0.4 }, P2 + 0.4);
+          tl.fromTo("#routes-panel .lg", { opacity: 0 }, { opacity: 1, duration: 0.5 }, P2 + 0.5);
+          const vals = [[22258, "#routes-v1"], [-2113, "#routes-v2"], [-509868, "#routes-v3"]];
+          vals.forEach(([v, sel], i) => {
+            const at = P2 + 1.0 + i * 0.45;
+            tl.fromTo("#routes-p" + (i + 1), { opacity: 0, x: 24 }, { opacity: 1, x: 0, duration: 0.5, ease: "power3.out" }, at);
+            const o = { v: 0 }, el = document.querySelector(sel);
+            tl.to(o, { v, duration: 1.4, ease: "power3.out", onUpdate: () => { el.textContent = fmt(o.v); } }, at + 0.2);
+          });
+          tl.fromTo("#routes-note", { opacity: 0 }, { opacity: 1, duration: 0.5 }, P2 + 2.8);
+          // camera: zoom into the top of the frontier, where the useful policies sit
+          tl.fromTo("#routes-img-f", { scale: 1 }, { scale: 1.7, duration: 1.6, ease: "power2.inOut" }, P2 + 3.4);
+          tl.to("#routes-p1", { boxShadow: "0 0 50px rgba(63,216,168,0.35)", duration: 0.8, ease: "sine.inOut", yoyo: true, repeat: 3 }, P2 + 3.6);
+          tl.to("#routes-in", { opacity: 0, duration: 0.4, ease: "power2.in" }, D - 0.4);
+          window.__timelines["routes"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

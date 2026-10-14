@@ -1,0 +1,446 @@
+# Audit facts for the order-outcome-margin demo video.
+# Read by docs/demo/source/tools/build_audit_report.py (paths below are relative to this file).
+#
+# Check expressions are Python, evaluated with these helpers (paths relative to the repo root;
+# a "demo:" prefix means relative to the demo project folder):
+#   R(path) -> pandas DataFrame from CSV      J(path) -> parsed JSON
+#   row(path, **eq) -> the single CSV row matching all equalities (a pandas Series)
+#   T(path) -> file text                      grep(path, regex) -> True/False
+# A check passes when fmt.format(value) == expect (or, with fmt "bool", when value is True).
+
+project:
+  name: order-outcome-margin
+  title: "order-outcome-margin: demo video audit report"
+  repo_url: https://github.com/kavya2693/order-outcome-margin
+  repo_dir: ../../../..
+  demo_dir: ..
+  demo_display: docs/demo/source
+  out_dir: ../..
+  video: docs/demo/demo.mp4
+  video_duration_s: 85.6
+  outputs_dir: outputs
+  venv_python: .venv/bin/python
+  version_packages: [lightgbm, sklearn, pandas, numpy]
+  regenerate:
+    - "make run                                   # data/, outputs/*.csv, results.json, report.md, *.png (about 2 min)"
+    - "python3 docs/demo/source/tools/darkmap.py outputs docs/demo/source/assets"
+    - "PYTHONPATH=src .venv/bin/python docs/demo/source/tools/export_cod_sheet.py docs/demo/source/assets/cod_sheet.json"
+    - "python3 docs/demo/source/tools/inject_sheet.py docs/demo/source/assets/cod_sheet.json docs/demo/source/compositions/value.html --rows 315400,316055,316096,316229,315744,316309 --animate 315400,316096,316229,315744"
+    - "cd docs/demo/source && npx --yes hyperframes@0.8.156 check && npx --yes hyperframes@0.8.156 render -f 30 -q looks -o renders/order-outcome-margin-master.mp4 && cd -"
+    - "ffmpeg -y -i docs/demo/source/renders/order-outcome-margin-master.mp4 -c:v libx264 -preset slow -crf 25 -pix_fmt yuv420p -movflags +faststart -an docs/demo/demo.mp4"
+    - "python3 docs/demo/source/tools/build_audit_report.py docs/demo/source/audit/facts.yaml   # stills, checks, MD/DOCX/PDF"
+  seeds: {data_seed: 20260913, lightgbm_seed: 7, bootstrap_seed: 0}
+  run_time: "results.json runtime_seconds = 72.8 s for the pipeline (make run also generates the data first; README says about 2 minutes on a laptop)"
+
+assumptions:
+  - id: A-01
+    statement: "All data is synthetic, produced by a seeded generator sized to the production problem (341,880 orders over 2024-2025, six zones, five categories, COD about 48%). The production data is proprietary."
+    source: "src/order_margin/config.py:78 (SEED = 20260913); src/order_margin/generate.py; README 'The data'"
+    all_figures: true
+    figures: []
+    edit: ["src/order_margin/generate.py", "src/order_margin/world.py"]
+    rerun: ["make data", "make run"]
+  - id: A-02
+    statement: "Card conversion: 40% of blocked customers younger than 30 days and 60% of the rest switch to a card. It is an input, not measured; with decisions fixed, 20 points lower conversion breaks even (+944) and 30 points lower loses 9,714."
+    source: "src/order_margin/config.py:75-76 (COD_TO_CARD_CONVERSION, NEW_CUSTOMER_DAYS); outputs/conversion_sensitivity.csv; README 'Known limitations' (biggest gap)"
+    figures: [F-13, F-14, F-21, F-32, F-33, F-34, F-39, F-40, F-41, F-44, F-45, F-46, F-47]
+    edit: ["src/order_margin/config.py:75"]
+    rerun: ["make run", "export_cod_sheet.py + inject_sheet.py"]
+  - id: A-03
+    statement: "Unit economics are one table per category (gross margin, resale loss, shipping legs, COD/card/wallet fees, a 45 chargeback fee). Real courier rates vary by weight and contract."
+    source: "src/order_margin/config.py:22-60 (Economics); src/order_margin/economics.py:36-71"
+    figures: [F-13, F-14, F-28, F-29, F-30, F-32, F-40, F-41, F-44, F-45, F-46, F-47]
+    edit: ["src/order_margin/config.py:22-60"]
+    rerun: ["make run", "export_cod_sheet.py + inject_sheet.py"]
+  - id: A-04
+    statement: "Time split: train 2024-01-01..2025-02-28, early stopping 2025-03..04, calibration 2025-05..08, test 2025-09-01..12-31 (73,024 orders, 122 days)."
+    source: "src/order_margin/config.py:67-71; pipeline.py:64-71 (split_masks)"
+    figures: [F-20, F-23, F-25, F-27, F-28, F-29, F-35]
+    edit: ["src/order_margin/config.py:67-71"]
+    rerun: ["make run"]
+  - id: A-05
+    statement: "Outcomes are known 14 days after the order; customer history features only use orders placed at least 14 days earlier, shrunk towards fixed long-run rates."
+    source: "src/order_margin/features.py:15-19 (RESOLVE_DAYS, PRIOR_STRENGTH, POPULATION_RATE)"
+    figures: [F-17]
+    edit: ["src/order_margin/features.py:15"]
+    rerun: ["make run"]
+  - id: A-06
+    statement: "COD policies are scored on the generator's true outcome probabilities under COD and under card (data/truth/order_truth.csv.gz), never on the model that made the decision. The card version of an order is the same order with the payment feature switched."
+    source: "src/order_margin/pipeline.py:186-201 (counterfactual), :236-245 (score_policy); features.py:with_payment; README 'How it works'"
+    figures: [F-13, F-14, F-32, F-40, F-44, F-45, F-46, F-47]
+    edit: ["src/order_margin/pipeline.py"]
+    rerun: ["make run"]
+  - id: A-07
+    statement: "LightGBM settings: multiclass, learning rate 0.03, 15 leaves, seed 7, early stopping with 100-round patience on the March-April 2025 window (stopped at 186 rounds); chosen from four settings, never on the test window."
+    source: "src/order_margin/models.py:71-108; README 'How it works'"
+    figures: [F-18, F-19, F-50, F-51]
+    edit: ["src/order_margin/models.py:71-89"]
+    rerun: ["make run"]
+  - id: A-08
+    statement: "One seed and one test window. The bootstrap interval (1,000 order resamples) covers which orders arrived, not a different year or fraud pattern."
+    source: "src/order_margin/pipeline.py:268-275; README 'Known limitations'"
+    figures: [F-46, F-47]
+    edit: ["src/order_margin/config.py:78"]
+    rerun: ["make data", "make run"]
+  - id: A-09
+    statement: "'Sale days' = days flagged is_peak: the November sale week (2025-11-21..29) plus 11.11. The dashed SALE WEEK box on slide 06 marks Nov 21-29 only."
+    source: "src/order_margin/generate.py:30-31 (SALE_WEEKS, SINGLES_DAY); pipeline.py:74-85 (_daily_errors)"
+    figures: [F-28, F-29, F-37]
+    edit: ["src/order_margin/generate.py:30-31"]
+    rerun: ["make data", "make run"]
+  - id: A-10
+    statement: "Video rounding: margins to whole units with thousands separators, percentages to 1 decimal (63% and 48% to whole numbers), log-loss to 4 decimals, macro-F1 and ECE as in report.md; '~470 a day' and 'about 2 min' are rounded labels."
+    source: "this audit (display convention)"
+    figures: [F-05, F-07, F-09, F-22, F-28, F-29, F-34, F-44, F-55, F-58]
+    edit: ["the composition file named on each slide"]
+    rerun: ["hyperframes render"]
+  - id: A-11
+    statement: "Slide 01 (industry, everyday problems) is general e-commerce knowledge used as context, matched to the README problem statement. It is not a result of this repo and carries no numbers."
+    source: "author's framing; README 'The problem'"
+    figures: [F-01, F-02]
+    edit: ["compositions/s01-context.html"]
+    rerun: ["hyperframes render"]
+
+figures:
+  # ---- slide 01
+  - {id: F-01, slides: ["01"], label: "Who relates: online marketplaces, cash-on-delivery e-commerce, finance & checkout ops teams", shown: "3 chips", type: general-knowledge, source: "author's framing; README 'The problem' (finance and operations teams)", key: "-", formula: "-", manual: "Context statement, not a repo output."}
+  - {id: F-02, slides: ["01"], label: "Four everyday problems (refused COD parcels; returns/cancels/chargebacks; flat-average margin plans; gut-rule COD switch-off)", shown: "4 problem cards", type: general-knowledge, source: "README 'The problem'", key: "README lines 12-25", formula: "-",
+     check: {expr: "grep('README.md', r'refuses the parcel') and grep('README.md', r\"last quarter's average\") and grep('README.md', r'hide the COD option') and grep('README.md', r'disputes')", fmt: bool}}
+  # ---- slide 02
+  - {id: F-03, slides: ["02", "05"], label: "Orders in the history", shown: "341,880 orders", type: direct, source: "outputs/results.json", key: "orders_total", formula: "-",
+     check: {expr: "J('outputs/results.json')['orders_total']", fmt: "{:,d}", expect: "341,880"}}
+  - {id: F-04, slides: ["02", "05"], label: "History length", shown: "2 years / 2024–2025", type: direct, source: "src/order_margin/config.py:70-71", key: "DATA_START, DATA_END", formula: "-",
+     check: {expr: "grep('src/order_margin/config.py', r'DATA_START = \"2024-01-01\"') and grep('src/order_margin/config.py', r'DATA_END = \"2025-12-31\"')", fmt: bool}}
+  - {id: F-05, slides: ["02"], label: "Share of orders paid cash on delivery", shown: "48%", type: derived, source: "data/orders.csv.gz", key: "payment == 'cod'", formula: "share of COD orders = 48.3%",
+     check: {expr: "(R('data/orders.csv.gz')['payment'] == 'cod').mean() * 100", fmt: "{:.0f}%", expect: "48%"}}
+  - {id: F-06, slides: ["02", "03"], label: "Five outcome classes", shown: "Five ways each one can end / 5 ways it could end", type: direct, source: "src/order_margin/config.py:11", key: "CLASSES", formula: "len = 5",
+     check: {expr: "len(_re.search(r'CLASSES: tuple\\[str, \\.\\.\\.\\] = \\((.*)\\)', T('src/order_margin/config.py')).group(1).split(','))", fmt: "{:d}", expect: "5"}}
+  - {id: F-07, slides: ["02"], label: "Orders per day", shown: "~470 orders a day", type: derived, source: "data/orders.csv.gz", key: "orders / distinct order days", formula: "341,880 / 731 = 467.7, rounded to tens (README: 'around 470 orders a day')",
+     check: {expr: "round(len(R('data/orders.csv.gz')) / R('data/orders.csv.gz')['order_ts'].str[:10].nunique(), -1)", fmt: "~{:.0f}", expect: "~470"}}
+  - {id: F-08, slides: ["02"], label: "Delivery zones", shown: "6 delivery zones, 2 remote", type: direct, source: "src/order_margin/config.py:17-18", key: "ZONES, REMOTE_ZONES", formula: "-",
+     check: {expr: "R('data/orders.csv.gz')['zone'].nunique() == 6 and grep('src/order_margin/config.py', r'frozenset\\(\\{\"remote_north\", \"remote_south\"\\}\\)')", fmt: bool}}
+  - {id: F-09, slides: ["02"], label: "Orders that do not end delivered", shown: "1 in 5 orders is not delivered", type: derived, source: "data/orders.csv.gz", key: "outcome != delivered", formula: "1 - 0.798 = 20.2% = 1 in 5 (test window: 20.9%)",
+     check: {expr: "round((R('data/orders.csv.gz')['outcome'] != 'delivered').mean() * 5)", fmt: "{:d} in 5", expect: "1 in 5"}}
+  # ---- slide 03
+  - {id: F-10, slides: ["03"], label: "Each COD order is scored as cash and as card", shown: "scored as cash and as card", type: direct, source: "src/order_margin/pipeline.py:193-201", key: "with_payment(Xt_cod, 'card')", formula: "-",
+     check: {expr: "grep('src/order_margin/pipeline.py', r'Xt_card = with_payment\\(Xt_cod, \"card\"\\)')", fmt: bool}}
+  - {id: F-11, slides: ["03"], label: "Outputs: daily margin, cash rules, beats the risk rule", shown: "daily margin / cash rules / beats risk rule", type: derived, source: "outputs/daily_margin.csv, outputs/results.json", key: "122 daily rows; margin_minus_risk_rule > 0", formula: "-",
+     check: {expr: "len(R('outputs/daily_margin.csv')) == 122 and J('outputs/results.json')['margin_minus_risk_rule'] > 0", fmt: bool}}
+  - {id: F-12, slides: ["03"], label: "Calibration step exists (isotonic, one class vs rest)", shown: "CALIBRATE · make the odds honest", type: direct, source: "src/order_margin/calibration.py:26-39", key: "IsotonicCalibrator", formula: "-",
+     check: {expr: "grep('src/order_margin/calibration.py', r'class IsotonicCalibrator')", fmt: bool}}
+  # ---- slide 04
+  - {id: F-13, slides: ["04", "06", "08"], label: "Margin change, margin rule (LightGBM + isotonic), test window", shown: "+22,258", type: direct, source: "outputs/policy.csv", key: "policy='margin rule, gbm + isotonic', margin_change", formula: "-",
+     check: {expr: "row('outputs/policy.csv', policy='margin rule, gbm + isotonic')['margin_change']", fmt: "{:+,.0f}", expect: "+22,258"}}
+  - {id: F-14, slides: ["04", "06", "08"], label: "Margin change, risk score at the same block rate", shown: "−2,113", type: direct, source: "outputs/policy.csv", key: "policy='risk score, same block rate as margin rule on calib (14.6%)', margin_change", formula: "-",
+     check: {expr: "row('outputs/policy.csv', policy='risk score, same block rate as margin rule on calib (14.6%)')['margin_change']", fmt: "{:+,.0f}", expect: "-2,113"}}
+  # ---- slide 05
+  - {id: F-15, slides: ["05"], label: "Every architecture box exists in the code", shown: "config.py, generate.py, features.py, models.py, calibration.py, economics.py, policy.py, pipeline.py, data/truth", type: direct, source: "src/order_margin/", key: "classes and functions", formula: "-",
+     check: {expr: "all(grep('src/order_margin/' + f, p) for f, p in [('config.py', r'class Economics'), ('config.py', r'TRAIN_END'), ('generate.py', r'def generate'), ('features.py', r'def build_features'), ('features.py', r'def with_payment'), ('models.py', r'class GBMModel'), ('models.py', r'class PriorModel'), ('models.py', r'class LogitModel'), ('calibration.py', r'class IsotonicCalibrator'), ('calibration.py', r'class PlattCalibrator'), ('economics.py', r'def expected_margin'), ('policy.py', r'def conversion_rate'), ('pipeline.py', r'def split_masks'), ('pipeline.py', r'def write')]) and grep('src/order_margin/pipeline.py', r'truth.*order_truth.csv.gz')", fmt: bool}}
+  - {id: F-16, slides: ["05"], label: "Model features", shown: "23 columns", type: direct, source: "src/order_margin/features.py:21-45", key: "NUMERIC (20) + CATEGORICAL (3)", formula: "20 + 3 = 23",
+     check: {expr: "n_features()", fmt: "{:d}", expect: "23"}}
+  - {id: F-17, slides: ["05"], label: "History features lag", shown: "history ≥14 d old", type: direct, source: "src/order_margin/features.py:15", key: "RESOLVE_DAYS = 14", formula: "-",
+     check: {expr: "grep('src/order_margin/features.py', r'^RESOLVE_DAYS = 14$')", fmt: bool}}
+  - {id: F-18, slides: ["05"], label: "Boosting rounds at early stop", shown: "186 rounds", type: direct, source: "outputs/results.json", key: "gbm_rounds", formula: "-",
+     check: {expr: "J('outputs/results.json')['gbm_rounds']", fmt: "{:d}", expect: "186"}}
+  - {id: F-19, slides: ["05"], label: "Trees per round = number of classes (LightGBM multiclass)", shown: "× 5 trees / 5-outcome softmax", type: derived, source: "src/order_margin/models.py:74-75", key: "objective multiclass, num_class = N_CLASSES = 5", formula: "186 rounds x 5 = 930 trees",
+     check: {expr: "grep('src/order_margin/models.py', r'\"objective\": \"multiclass\"') and grep('src/order_margin/models.py', r'\"num_class\": N_CLASSES')", fmt: bool}}
+  - {id: F-20, slides: ["05"], label: "Calibration window", shown: "fit May–Aug 25", type: direct, source: "src/order_margin/config.py:68-69", key: "EARLY_STOP_END 2025-04-30, CALIB_END 2025-08-31", formula: "-",
+     check: {expr: "grep('src/order_margin/config.py', r'EARLY_STOP_END = \"2025-04-30\"') and grep('src/order_margin/config.py', r'CALIB_END = \"2025-08-31\"')", fmt: bool}}
+  - {id: F-21, slides: ["05"], label: "Card conversion input", shown: "40% / 60% · assumed input", type: direct, source: "src/order_margin/config.py:75", key: "COD_TO_CARD_CONVERSION", formula: "-",
+     check: {expr: "grep('src/order_margin/config.py', r'COD_TO_CARD_CONVERSION = \\{\"new\": 0.40, \"returning\": 0.60\\}')", fmt: bool}}
+  - {id: F-22, slides: ["05"], label: "Pipeline run time", shown: "72.8 s", type: direct, source: "outputs/results.json", key: "runtime_seconds", formula: "-",
+     check: {expr: "J('outputs/results.json')['runtime_seconds']", fmt: "{:.1f} s", expect: "72.8 s"}}
+  - {id: F-23, slides: ["05", "08", "09"], label: "Test-window orders", shown: "73,024 orders", type: direct, source: "outputs/results.json", key: "orders_test", formula: "-",
+     check: {expr: "J('outputs/results.json')['orders_test']", fmt: "{:,d}", expect: "73,024"}}
+  - {id: F-24, slides: ["05"], label: "Evaluation metrics named in the lane", shown: "log-loss · classwise ECE · daily margin error · COD policy on true p · bootstrap 95% CI", type: direct, source: "src/order_margin/pipeline.py:139-160, 274-275; calibration.py:64-83", key: "-", formula: "-",
+     check: {expr: "grep('src/order_margin/calibration.py', r'def classwise_ece') and grep('src/order_margin/calibration.py', r'def log_loss') and grep('src/order_margin/pipeline.py', r'daily_mape') and grep('src/order_margin/pipeline.py', r'np.percentile\\(boot, \\[2.5, 97.5\\]\\)')", fmt: bool}}
+  - {id: F-25, slides: ["05"], label: "Four date windows", shown: "4 date windows · train · stop · calib · test", type: direct, source: "src/order_margin/pipeline.py:64-71", key: "split_masks keys", formula: "-",
+     check: {expr: "all(grep('src/order_margin/pipeline.py', '\"' + k + '\": ') for k in ['train', 'early_stop', 'calib', 'test'])", fmt: bool}}
+  # ---- slide 06
+  - {id: F-26, slides: ["06"], label: "Daily margin plot", shown: "expected vs realized daily margin (image)", type: direct, source: "outputs/daily_margin.png via tools/darkmap.py", key: "-", formula: "-", manual: "Image of the repo's own figure, colour-inverted to dark; legend redrawn because the original legend was painted over."}
+  - {id: F-27, slides: ["06"], label: "Test days", shown: "122 test days", type: direct, source: "outputs/results.json", key: "test_days", formula: "-",
+     check: {expr: "J('outputs/results.json')['test_days']", fmt: "{:d}", expect: "122"}}
+  - {id: F-28, slides: ["06", "08"], label: "Daily margin error on sale days, flat class rates", shown: "22.5%", type: direct, source: "outputs/metrics.csv", key: "model='class priors', daily_mape_peak (0.2254)", formula: "x 100",
+     check: {expr: "row('outputs/metrics.csv', model='class priors')['daily_mape_peak'] * 100", fmt: "{:.1f}%", expect: "22.5%"}}
+  - {id: F-29, slides: ["06", "08"], label: "Daily margin error on sale days, LightGBM + isotonic", shown: "4.3%", type: direct, source: "outputs/metrics.csv", key: "model='gbm + isotonic', daily_mape_peak (0.0431)", formula: "x 100",
+     check: {expr: "row('outputs/metrics.csv', model='gbm + isotonic')['daily_mape_peak'] * 100", fmt: "{:.1f}%", expect: "4.3%"}}
+  - {id: F-30, slides: ["06"], label: "Class weighting forecasts a loss every day", shown: "Class weighting forecasts a loss every day.", type: direct, source: "outputs/daily_margin.csv", key: "column 'gbm class-weighted, raw' max = -10,259", formula: "max < 0",
+     check: {expr: "R('outputs/daily_margin.csv')['gbm class-weighted, raw'].max() < 0", fmt: bool}}
+  - {id: F-31, slides: ["06"], label: "Policy frontier plot", shown: "margin gained against orders lost (image)", type: direct, source: "outputs/policy_frontier.png via tools/darkmap.py", key: "-", formula: "-", manual: "Image of the repo's own figure, colour-inverted to dark, then zoomed 1.7x towards the top band; legend redrawn on the right."}
+  - {id: F-32, slides: ["06"], label: "Margin change, block every COD order", shown: "−509,868", type: direct, source: "outputs/policy.csv", key: "policy='block every COD order', margin_change", formula: "-",
+     check: {expr: "row('outputs/policy.csv', policy='block every COD order')['margin_change']", fmt: "{:+,.0f}", expect: "-509,868"}}
+  - {id: F-33, slides: ["06"], label: "Orders lost, block every COD order", shown: "14,469 orders lost", type: direct, source: "outputs/policy.csv", key: "orders_lost = 14,468.6", formula: "rounded",
+     check: {expr: "row('outputs/policy.csv', policy='block every COD order')['orders_lost']", fmt: "{:,.0f}", expect: "14,469"}}
+  - {id: F-34, slides: ["06"], label: "Share of COD orders the margin rule hides", shown: "15.5% of COD hidden", type: direct, source: "outputs/policy.csv", key: "policy='margin rule, gbm + isotonic', blocked_share_of_cod (0.1554)", formula: "x 100",
+     check: {expr: "row('outputs/policy.csv', policy='margin rule, gbm + isotonic')['blocked_share_of_cod'] * 100", fmt: "{:.1f}%", expect: "15.5%"}}
+  - {id: F-35, slides: ["06", "08"], label: "COD orders in the test window", shown: "35,389 COD orders", type: direct, source: "outputs/results.json", key: "cod_orders_test", formula: "-",
+     check: {expr: "J('outputs/results.json')['cod_orders_test']", fmt: "{:,d}", expect: "35,389"}}
+  - {id: F-36, slides: ["06"], label: "Risk score gets the same block rate as the margin rule (set on the calibration window)", shown: "Risk score · same block rate", type: direct, source: "src/order_margin/pipeline.py:206-218", key: "threshold_for_share(risk_score(pc_c), share)", formula: "-",
+     check: {expr: "grep('src/order_margin/pipeline.py', r'risk_t = threshold_for_share\\(risk_score\\(pc_c\\), share\\)')", fmt: bool}}
+  # ---- slide 07
+  - {id: F-37, slides: ["07"], label: "Sheet day is a sale-week day", shown: "SALE WEEK · 2025-11-24", type: direct, source: "demo assets/cod_sheet.json; src/order_margin/generate.py:30", key: "day, is_peak", formula: "-",
+     check: {expr: "J('demo:assets/cod_sheet.json')['day'] == '2025-11-24' and J('demo:assets/cod_sheet.json')['is_peak'] == 1 and grep('src/order_margin/generate.py', r'\\(\"2025-11-21\", \"2025-11-29\"\\)')", fmt: bool}}
+  - {id: F-38, slides: ["07"], label: "COD orders on the sheet day", shown: "609 COD orders (6 rows + 603 more)", type: direct, source: "demo assets/cod_sheet.json; data/orders.csv.gz", key: "cod_orders; COD orders placed on 2025-11-24", formula: "-",
+     check: {expr: "(lambda o: J('demo:assets/cod_sheet.json')['cod_orders'] == int(((o['order_ts'].str[:10] == '2025-11-24') & (o['payment'] == 'cod')).sum()) == 609)(R('data/orders.csv.gz'))", fmt: bool}}
+  - {id: F-39, slides: ["07"], label: "Orders where the margin rule hides COD that day", shown: "102 of 609 COD orders hide COD · 507 keep it", type: direct, source: "demo assets/cod_sheet.json", key: "blocked, kept", formula: "102 + 507 = 609",
+     check: {expr: "(lambda d: (d['blocked'], d['kept']) == (102, 507) and sum(r['block'] for r in d['rows']) == 102)(J('demo:assets/cod_sheet.json'))", fmt: bool}}
+  - {id: F-40, slides: ["07"], label: "Margin gained that day vs keeping COD for everyone (scored on true probabilities)", shown: "+602 margin that day", type: direct, source: "demo assets/cod_sheet.json", key: "day_true_gain", formula: "sum over hidden orders of conv x E_true[card] - E_true[cod]",
+     check: {expr: "J('demo:assets/cod_sheet.json')['day_true_gain']", fmt: "{:+,.0f}", expect: "+602"}}
+  - {id: F-41, slides: ["07"], label: "Six sheet rows (order, zone, category, basket, refusal p, E[margin] as COD and card, gain, action)", shown: "315400, 316055, 316096, 316229, 315744, 316309", type: direct, source: "demo assets/cod_sheet.json, injected into compositions/value.html", key: "rows", formula: "gain = conv x IF CARD - IF COD; action = HIDE COD if gain > 0",
+     check: {expr: "sheet_rows_match()", fmt: bool}}
+  - {id: F-42, slides: ["07"], label: "Export reproduces the repo's decisions", shown: "(consistency check, not on screen)", type: derived, source: "demo assets/cod_sheet.json; outputs/policy.csv", key: "test_window_blocked vs policy 'margin rule, gbm + isotonic' cod_orders_blocked", formula: "5,498 = 5,498; 186 rounds = 186",
+     check: {expr: "J('demo:assets/cod_sheet.json')['test_window_blocked'] == int(row('outputs/policy.csv', policy='margin rule, gbm + isotonic')['cod_orders_blocked']) and J('demo:assets/cod_sheet.json')['gbm_rounds'] == J('outputs/results.json')['gbm_rounds']", fmt: bool}}
+  - {id: F-43, slides: ["07"], label: "COD orders not shown on the sheet", shown: "+ 603 more COD orders", type: derived, source: "F-38", key: "609 - 6 rows", formula: "609 - 6 = 603",
+     check: {expr: "J('demo:assets/cod_sheet.json')['cod_orders'] - 6", fmt: "{:d}", expect: "603"}}
+  # ---- slide 08
+  - {id: F-44, slides: ["08"], label: "Share of the ceiling gain the margin rule recovers", shown: "63%", type: derived, source: "outputs/policy.csv", key: "margin rule 22,258 / true-probability ceiling 35,479", formula: "22,258 / 35,479 = 62.7%",
+     check: {expr: "row('outputs/policy.csv', policy='margin rule, gbm + isotonic')['margin_change'] / row('outputs/policy.csv', policy='margin rule, true probabilities (ceiling)')['margin_change'] * 100", fmt: "{:.0f}%", expect: "63%"}}
+  - {id: F-45, slides: ["08"], label: "Ceiling gain (true probabilities)", shown: "true p ceiling: +35,479", type: direct, source: "outputs/policy.csv", key: "policy='margin rule, true probabilities (ceiling)', margin_change", formula: "-",
+     check: {expr: "row('outputs/policy.csv', policy='margin rule, true probabilities (ceiling)')['margin_change']", fmt: "{:+,.0f}", expect: "+35,479"}}
+  - {id: F-46, slides: ["08"], label: "Margin rule minus risk rule at matched volume", shown: "+24,371", type: direct, source: "outputs/results.json", key: "margin_minus_risk_rule", formula: "-",
+     check: {expr: "J('outputs/results.json')['margin_minus_risk_rule']", fmt: "{:+,.0f}", expect: "+24,371"}}
+  - {id: F-47, slides: ["08"], label: "Bootstrap 95% CI of that difference", shown: "95% CI 21,580 to 27,556", type: direct, source: "outputs/results.json", key: "margin_minus_risk_rule_ci95", formula: "-",
+     check: {expr: "'{:,.0f} to {:,.0f}'.format(*J('outputs/results.json')['margin_minus_risk_rule_ci95'])", fmt: "{}", expect: "21,580 to 27,556"}}
+  # ---- slide 09
+  - {id: F-48, slides: ["09"], label: "Log-loss, flat class rates", shown: "0.7442", type: direct, source: "outputs/metrics.csv", key: "model='class priors', log_loss", formula: "-",
+     check: {expr: "row('outputs/metrics.csv', model='class priors')['log_loss']", fmt: "{:.4f}", expect: "0.7442"}}
+  - {id: F-49, slides: ["09"], label: "Log-loss, logistic regression (raw)", shown: "0.6475", type: direct, source: "outputs/metrics.csv", key: "model='logistic, raw', log_loss", formula: "-",
+     check: {expr: "row('outputs/metrics.csv', model='logistic, raw')['log_loss']", fmt: "{:.4f}", expect: "0.6475"}}
+  - {id: F-50, slides: ["09"], label: "Log-loss, LightGBM (raw)", shown: "0.6469", type: direct, source: "outputs/metrics.csv", key: "model='gbm, raw', log_loss", formula: "-",
+     check: {expr: "row('outputs/metrics.csv', model='gbm, raw')['log_loss']", fmt: "{:.4f}", expect: "0.6469"}}
+  - {id: F-51, slides: ["09"], label: "Log-loss, LightGBM + isotonic", shown: "0.6478", type: direct, source: "outputs/metrics.csv", key: "model='gbm + isotonic', log_loss", formula: "-",
+     check: {expr: "row('outputs/metrics.csv', model='gbm + isotonic')['log_loss']", fmt: "{:.4f}", expect: "0.6478"}}
+  - {id: F-52, slides: ["09"], label: "Log-loss, true probabilities (ceiling)", shown: "0.6181", type: direct, source: "outputs/metrics.csv", key: "model='true probabilities (ceiling)', log_loss", formula: "-",
+     check: {expr: "row('outputs/metrics.csv', model='true probabilities (ceiling)')['log_loss']", fmt: "{:.4f}", expect: "0.6181"}}
+  - {id: F-53, slides: ["09"], label: "Macro-F1, logistic raw and LightGBM raw", shown: "macro-F1 0.290 / 0.294", type: direct, source: "outputs/metrics.csv", key: "macro_f1", formula: "-",
+     check: {expr: "'{:.3f} / {:.3f}'.format(row('outputs/metrics.csv', model='logistic, raw')['macro_f1'], row('outputs/metrics.csv', model='gbm, raw')['macro_f1'])", fmt: "{}", expect: "0.290 / 0.294"}}
+  - {id: F-54, slides: ["09"], label: "Mean classwise ECE, LightGBM raw -> + isotonic", shown: "ECE 0.0027 → 0.0035", type: direct, source: "outputs/metrics.csv", key: "ece_mean", formula: "-",
+     check: {expr: "'{:.4f} -> {:.4f}'.format(row('outputs/metrics.csv', model='gbm, raw')['ece_mean'], row('outputs/metrics.csv', model='gbm + isotonic')['ece_mean'])", fmt: "{}", expect: "0.0027 -> 0.0035"}}
+  - {id: F-55, slides: ["09"], label: "Mean classwise ECE, class-weighted LightGBM raw -> + isotonic", shown: "ECE 0.206 → 0.009", type: direct, source: "outputs/metrics.csv", key: "ece_mean (0.2063, 0.0093)", formula: "rounded to 3 decimals",
+     check: {expr: "'{:.3f} -> {:.3f}'.format(row('outputs/metrics.csv', model='gbm class-weighted, raw')['ece_mean'], row('outputs/metrics.csv', model='gbm class-weighted + isotonic')['ece_mean'])", fmt: "{}", expect: "0.206 -> 0.009"}}
+  - {id: F-56, slides: ["09"], label: "Bar lengths = log-loss gain over flat class rates, ceiling = 1,000 px", shown: "bars 6 / 767 / 772 / 764 / 1000 px", type: derived, source: "outputs/metrics.csv", key: "(0.7442 - log_loss) / (0.7442 - 0.6181) x 1000", formula: "logistic 767, LightGBM 772, LightGBM + isotonic 764",
+     check: {expr: "bars_match()", fmt: bool}, note: "The flat-rates bar is a 6 px stub (its gain is zero by definition)."}
+  # ---- slide 10
+  - {id: F-57, slides: ["10"], label: "Licence", shown: "MIT", type: direct, source: "LICENSE line 1", key: "-", formula: "-",
+     check: {expr: "T('LICENSE').startswith('MIT License')", fmt: bool}}
+  - {id: F-58, slides: ["10"], label: "Full run time", shown: "about 2 min", type: direct, source: "README.md line 137", key: "'about 2 minutes on a laptop'", formula: "-",
+     check: {expr: "grep('README.md', r'about 2 minutes on a laptop')", fmt: bool}}
+  - {id: F-59, slides: ["10"], label: "Stack chips are real dependencies", shown: "LightGBM · scikit-learn · pandas · Python", type: direct, source: "pyproject.toml dependencies", key: "lightgbm, scikit-learn, pandas", formula: "-",
+     check: {expr: "all(grep('pyproject.toml', p) for p in [r'\"lightgbm', r'\"scikit-learn', r'\"pandas', r'requires-python'])", fmt: bool}}
+  - {id: F-60, slides: ["10"], label: "Run command", shown: "$ make run", type: direct, source: "Makefile", key: "run target", formula: "-",
+     check: {expr: "grep('Makefile', r'^run:')", fmt: bool}}
+
+slides:
+  - id: "01"
+    title: "The industry"
+    image: slides/slide-01.jpg
+    time: "0.0-7.2 s"
+    composition: "compositions/s01-context.html"
+    text:
+      - "01 · THE INDUSTRY"
+      - "Every order can end five ways. Only one of them earns money."
+      - "WHO LIVES WITH THIS · Online marketplaces · Cash-on-delivery e-commerce · Finance & checkout ops teams"
+      - "01 Cash parcels refused at the door — Shipped out and back, no cash collected"
+      - "02 Returns, cancellations and chargebacks — Each one costs a different amount"
+      - "03 Daily margin planned on flat averages — It breaks in a sale week or a fraud wave"
+      - "04 Cash on delivery switched off by gut rule — Good orders get pushed away with the bad"
+      - "THIS PROJECT tackles all four, end to end · predict → calibrate → price → decide"
+    assumptions: [A-11]
+    illustrative: ["The whole slide is context; no repo figures."]
+    change: "Edit the chips (#ctx-c1..3) and cards (#ctx-k1..4) in compositions/s01-context.html."
+  - id: "02"
+    title: "This project"
+    image: slides/slide-02.jpg
+    time: "6.8-11.6 s"
+    composition: "compositions/s02-hook.html"
+    text:
+      - "02 · THIS PROJECT"
+      - "341,880 orders, 2 years. 48% paid in cash at the door. Five ways each one can end."
+      - "~470 orders a day · 6 delivery zones, 2 remote · 1 in 5 orders is not delivered"
+    assumptions: [A-01, A-10]
+    illustrative: ["Rings in the background are decoration."]
+    change: "Headline spans #hook-l1..l3 and chips #hook-f1..f3 in compositions/s02-hook.html; volumes come from scripts/generate_data.py (make data)."
+  - id: "03"
+    title: "How it works (white chapter, slide A)"
+    image: slides/slide-03.jpg
+    time: "11.3-19.3 s"
+    composition: "compositions/explainer.html (CONFIG.blocks, CONFIG.groups, CONFIG.loop)"
+    text:
+      - "03 · HOW IT WORKS"
+      - "From an order to a decision"
+      - "ORDERS basket, payment, history → [THE MODEL: PREDICT 5 ways it could end → CALIBRATE make the odds honest] → [THE MONEY: PRICE IT money made or lost in each case → DECIDE keep or hide cash on delivery] → PLAN OUT ✓ daily margin ✓ cash rules ✓ beats risk rule"
+      - "scored as cash and as card (loop over PREDICT)"
+    assumptions: [A-02, A-03, A-06]
+    illustrative: ["Icons and colours are a visual language, not data."]
+    change: "Edit CONFIG in compositions/explainer.html; badge truth comes from F-11."
+  - id: "04"
+    title: "The key idea (white chapter, slide B)"
+    image: slides/slide-04.jpg
+    time: "19.3-26.3 s"
+    composition: "compositions/explainer.html (#ex-b ...)"
+    text:
+      - "04 · THE KEY IDEA"
+      - "Decide on margin, not risk"
+      - "Score each cash order twice — once as cash on delivery, once as a card order"
+      - "Price every outcome in money — a refusal, a return and a fraud cost different amounts"
+      - "Hide cash only if card earns more — after counting buyers who will not switch to card"
+      - "TWO RISKY CASH ORDERS · SCHEMATIC: Order A big basket, often refused (if cash > if card × switch) KEEP CASH; Order B thin basket, often refused (if cash < if card × switch) HIDE CASH. Same risk, opposite decisions. A risk score would block both."
+      - "Test window: margin rule +22,258 vs risk score −2,113 at the same block rate (both scored on true probabilities)."
+    assumptions: [A-02, A-03, A-06]
+    illustrative: ["Orders A and B and their bar lengths are schematic. Real rows with the same pattern are on slide 07 (order 316096: 41% refusal risk, KEEP COD; order 316309: 43%, HIDE COD)."]
+    change: "Markup under #ex-b in compositions/explainer.html; the footnote figures are F-13 and F-14."
+  - id: "05"
+    title: "Architecture"
+    image: slides/slide-05a.jpg
+    image2: slides/slide-05b.jpg
+    time: "26.0-40.0 s"
+    composition: "compositions/s03-architecture.html (N nodes, W wires)"
+    text:
+      - "05 · ARCHITECTURE"
+      - "Probabilities in, money out: one decision per cash order."
+      - "Layers: SOURCES · FEATURES · MODELS · CALIBRATION · DECISION · CONSUMERS"
+      - "config.py Time split (4 date windows) —train · stop · calib · test→ LightGBM"
+      - "generate.py Order history (341,880 orders, 2024–2025) —order rows→ features.py Features (23 columns, history ≥14 d old) —X · 23 cols→ models.py LightGBM (5-outcome softmax, 186 rounds × 5 trees) —raw p · n×5→ calibration.py Isotonic (1-vs-rest, fit May–Aug 25) —p · sums to 1→ economics.py E[margin] (Σ p × margin, as COD and card) —margin / day→ Finance"
+      - "features.py with_payment (COD → card): COD rows in, payment = card back into LightGBM (dotted, 2nd pass)"
+      - "config.py Margin table (fees · shipping) —margin per outcome→ E[margin]; E[cod] · E[card] → policy.py gain > 0 ? (yes: hide COD → Checkout, COD on / off; no: keep COD (default))"
+      - "human input: Card switch (40% / 60%, assumed input) —conv→ gain > 0 ?"
+      - "Ghost boxes (compared, not shipped): Platt (compared), Baselines (priors · logistic, class-weighted ✗); runtime 72.8 s pipeline run, offline batch"
+      - "data/truth True p (scoring only) —true p only→ pipeline.py evaluation: Evaluation · test window Sep–Dec 2025 · 73,024 orders · log-loss · classwise ECE · daily margin error · COD policy on true p · bootstrap 95% CI → outputs/ (report.md)"
+      - "Legend: data store · config · decision · human input · compared, not shipped · batch flow · 2nd pass, as card · scoring only"
+      - "CRITICAL PATH order rows → features → LightGBM → isotonic → E[margin] → gain > 0 ? → checkout"
+    assumptions: [A-01, A-02, A-04, A-05, A-06, A-07]
+    illustrative: ["Packets moving along the wires show execution order, not timing.", "'Finance' and 'Checkout' are the consumers the README names (finance close, checkout COD option); the repo writes files, it does not call a checkout service.", "'offline batch' describes how the repo runs (one CLI run over files); no serving latency is measured, so none is shown."]
+    change: "Node array N and wire array W in compositions/s03-architecture.html."
+  - id: "06"
+    title: "The system running"
+    image: slides/slide-06a.jpg
+    image2: slides/slide-06b.jpg
+    time: "39.6-54.2 s"
+    composition: "compositions/s04-routes.html; assets/plot-daily.png, assets/plot-frontier.png (from outputs/*.png via tools/darkmap.py)"
+    text:
+      - "06 · THE SYSTEM RUNNING"
+      - "122 test days: the margin each model expected, against what landed."
+      - "SALE WEEK (dashed box) · realized · LightGBM + isotonic · flat class rates · class-weighted LightGBM"
+      - "Sale days: flat class rates miss the day's margin by 22.5%, LightGBM + isotonic by 4.3%. Class weighting forecasts a loss every day."
+      - "Blocking COD: margin gained against orders lost."
+      - "rank by margin gain (model) · rank by risk score · rank by margin gain (true p)"
+      - "Margin rule (15.5% of COD hidden) +22,258 · Risk score (same block rate) −2,113 · Block every COD (14,469 orders lost) −509,868"
+      - "Decided by LightGBM + isotonic, scored on the generator's true probabilities."
+      - "x: orders lost (log) · y: margin change · 35,389 COD orders"
+    assumptions: [A-02, A-03, A-04, A-06, A-09]
+    illustrative: ["Plots are the repo's real figures, colour-inverted to dark; legends are redrawn because the originals were painted over.", "The frontier zooms 1.7x towards its top band; the zoom crops the y tick labels."]
+    change: "Captions and counters in compositions/s04-routes.html; plots come from make run → outputs/daily_margin.png and outputs/policy_frontier.png, then tools/darkmap.py."
+  - id: "07"
+    title: "End-user value (white)"
+    image: slides/slide-07.jpg
+    time: "53.9-66.9 s"
+    composition: "compositions/value.html (SHEET block injected by tools/inject_sheet.py)"
+    text:
+      - "07 · END-USER VALUE"
+      - "What the checkout ops lead gets"
+      - "COD DECISIONS · SALE WEEK · 2025-11-24 — columns ORDER, ZONE, CATEGORY, BASKET, REFUSE, IF COD, IF CARD, GAIN, ACTION"
+      - "315400 remote_south home 1,824 47% 127 295 +49.5 HIDE COD"
+      - "316055 remote_north grocery 859 46% 25 80 +23.2 HIDE COD"
+      - "316096 remote_north electronics 984 41% 13 20 −1.3 KEEP COD"
+      - "316229 remote_north electronics 670 54% −12 3 +13.7 HIDE COD"
+      - "315744 remote_south home 814 29% 93 141 −8.3 KEEP COD"
+      - "316309 remote_south beauty 233 43% 6 34 +14.7 HIDE COD"
+      - "+ 603 more COD orders · gain = switch rate × IF CARD − IF COD · ✓ 102 of 609 COD orders hide COD · 507 keep it · +602 margin that day"
+      - "OPS LEAD · CHECKOUT RULES · CUSTOMERS AT CHECKOUT (4 phones: order id, basket, PAY COD / CARD) · card / kept · margin today vs COD for everyone +602"
+      - "COD goes off only where a card order earns more. Risky but profitable orders keep cash."
+    assumptions: [A-02, A-03, A-06, A-07]
+    illustrative: ["Ops-lead figure, laptop, phones and tokens are illustrative; no real people.", "The four phones show four of the six rows (two hidden, two kept), chosen to show both decisions. Order ids are the generator's synthetic ids.", "'card' under a phone means the order is offered card only; whether that customer converts is the 40/60% assumption (A-02).", "IF COD / IF CARD are the model's expected margins; the day total (+602) is scored on true probabilities, like the repo's policy table."]
+    change: "Re-run tools/export_cod_sheet.py, then tools/inject_sheet.py (--rows / --animate pick the orders); layout in compositions/value.html."
+  - id: "08"
+    title: "Results"
+    image: slides/slide-08.jpg
+    time: "66.6-75.4 s"
+    composition: "compositions/s05-results.html (stats array)"
+    text:
+      - "08 · RESULTS · TEST WINDOW SEP–DEC 2025"
+      - "Margin earned on COD, and a forecast that holds in sale week."
+      - "DECISION +22,258 margin, COD margin rule · risk score: −2,113"
+      - "DECISION 63% of the gain a perfect model gets · true p ceiling: +35,479"
+      - "FORECAST 4.3% daily margin error, sale days · flat class rates: 22.5%"
+      - "EVALUATION +24,371 margin rule minus risk rule · 95% CI 21,580 to 27,556"
+      - "73,024 test orders · 35,389 paid by COD · every policy scored on the generator's true probabilities"
+    assumptions: [A-02, A-03, A-06, A-08, A-09, A-10]
+    illustrative: ["Mini bars: cards 1-2 = 22,258 / 35,479; card 3 = 4.3 / 22.5; card 4 is a full bar (no ratio)."]
+    change: "The stats array and card text in compositions/s05-results.html."
+  - id: "09"
+    title: "What didn't win"
+    image: slides/slide-09.jpg
+    time: "75.0-81.6 s"
+    composition: "compositions/s06-twist.html"
+    text:
+      - "09 · WHAT DIDN'T WIN"
+      - "Boosting barely beat a logistic regression."
+      - "Log-loss on 73,024 test orders, drawn as the gain over flat class rates (longer is better)"
+      - "Flat class rates (finance's averages) 0.7442 · Logistic regression (raw · macro-F1 0.290) 0.6475 · LightGBM (raw · macro-F1 0.294) 0.6469 · LightGBM + isotonic (ECE 0.0027 → 0.0035) 0.6478 · True probabilities (ceiling) 0.6181"
+      - "Why: outcomes here are close to additive in log-odds, the shape logistic regression assumes. Isotonic only earned its place repairing class weighting (ECE 0.206 → 0.009)."
+    assumptions: [A-01, A-07, A-10]
+    illustrative: ["Bar lengths: (0.7442 − log-loss) / (0.7442 − 0.6181) × 1,000 px (F-56)."]
+    change: "Rows #twist-r1..r5 (bar widths are inline styles) in compositions/s06-twist.html."
+  - id: "10"
+    title: "End card"
+    image: slides/slide-10.jpg
+    time: "81.2-85.6 s"
+    composition: "compositions/s07-end.html"
+    text:
+      - "10 · OPEN SOURCE · MIT · RUNS ON A LAPTOP"
+      - "order-outcome-margin"
+      - "github.com/kavya2693/order-outcome-margin"
+      - "LightGBM · scikit-learn · pandas · Python"
+      - "$ make run   # 341,880 orders, about 2 min"
+    assumptions: [A-10]
+    illustrative: ["Faded plot in the background is the policy frontier figure."]
+    change: "Text in compositions/s07-end.html."
+
+caveats:
+  - "The COD gain rests on an assumed card conversion (40% / 60%). With decisions fixed, 20 points lower conversion breaks even and 30 points lower loses 9,714 (outputs/conversion_sensitivity.csv, A-02). The README names this the biggest gap."
+  - "Policies are scored on the generator's true probabilities, which only exist because the data is synthetic (A-06). On real data the same comparison needs a randomised checkout holdout."
+  - "Orders lost are counted, not priced: a customer pushed away may not come back (README 'Known limitations')."
+  - "'Sale days' in the 22.5% / 4.3% figures include 11.11 as well as the Nov 21-29 sale week; the dashed box on slide 06 marks the sale week only (A-09)."
+  - "Slide 07 rows come from a re-run of the repo's own model for 2025-11-24 (tools/export_cod_sheet.py); the re-run reproduces the repo's 186 rounds and its 5,498 hidden COD orders over the test window exactly (F-42)."
+  - "The architecture's 'Finance' and 'Checkout' are the README's consumers; the repo itself writes files (outputs/) and runs as one offline batch. No serving latency exists, so none is shown."
+  - "Slide 01 statements are general industry knowledge (A-11)."
+
+stills:
+  master: renders/order-outcome-margin-master.mp4   # relative to demo_dir
+  width: 1600
+  times: {"01": 6.4, "02": 11.1, "03": 18.9, "04": 25.6, "05a": 33.4, "05b": 39.2, "06a": 45.4, "06b": 53.4, "07": 66.0, "08": 75.0, "09": 81.0, "10": 85.4}
+
+# Extra check helpers (Python), available to check expressions.
+helpers: |
+  import ast as _ast
+  import re as _re
+  def n_features():
+      """len(NUMERIC) + len(CATEGORICAL) parsed from features.py."""
+      tree = _ast.parse(T('src/order_margin/features.py'))
+      n = 0
+      for node in tree.body:
+          if isinstance(node, _ast.Assign) and getattr(node.targets[0], 'id', '') in ('NUMERIC', 'CATEGORICAL'):
+              n += len(node.value.elts)
+      return n
+  def sheet_rows_match():
+      """The SHEET block injected in value.html must equal the exported sheet for the six chosen orders."""
+      html = T('demo:compositions/value.html')
+      m = _re.search(r"const SHEET = (\{.*?\}); /\* SHEET:END", html, _re.S)
+      sheet = json.loads(m.group(1))
+      src = {r['order_id']: r for r in J('demo:assets/cod_sheet.json')['rows']}
+      for r in sheet['rows']:
+          s = src[r['order_id']]
+          for k in ('zone', 'category', 'basket', 'p_refuse', 'em_cod', 'em_card', 'gain', 'block'):
+              if r[k] != s[k]:
+                  return False
+          if (r['gain'] > 0) != r['block'] or abs(r['conv'] * r['em_card'] - r['em_cod'] - r['gain']) > 0.15:
+              return False
+      return [r['order_id'] for r in sheet['rows']] == [315400, 316055, 316096, 316229, 315744, 316309]
+  def bars_match():
+      """Twist bar widths in s06-twist.html follow (0.7442 - ll) / (0.7442 - 0.6181) x 1000."""
+      html = T('demo:compositions/s06-twist.html')
+      w = [int(x) for x in _re.findall(r'id="twist-b\d" style="width: (\d+)px"', html)]
+      m = R('outputs/metrics.csv').set_index('model')['log_loss']
+      base, ceil = m['class priors'], m['true probabilities (ceiling)']
+      want = [round((base - m[k]) / (base - ceil) * 1000) for k in ('logistic, raw', 'gbm, raw', 'gbm + isotonic')]
+      return w[1:4] == want and w[4] == 1000
