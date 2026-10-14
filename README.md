@@ -7,6 +7,195 @@
 Which orders will lose money, how much the day will really earn, and when cash on delivery
 should be switched off: a five-outcome order model priced with unit economics.
 
+[![86-second silent walkthrough: the problem, how the model and the money fit together, the architecture, the daily margin forecast and COD frontier, a day of COD decisions, and the results](docs/demo/demo.gif)](docs/demo/demo.mp4)
+
+*86-second silent walkthrough. Click for the full video ([MP4, 5.2 MB](docs/demo/demo.mp4)).*
+
+📄 **Audit report:** every figure and assumption in the video, traced to its source — [PDF](docs/demo/AUDIT_REPORT.pdf) · [Word](docs/demo/AUDIT_REPORT.docx) · [Markdown](docs/demo/AUDIT_REPORT.md)
+
+## At a glance
+
+| | |
+|---|---|
+| **Problem** | A marketplace ships about 470 orders a day, half of them cash on delivery. One in five orders does not end as a clean delivery, and returns, cancellations, refused parcels and fraud chargebacks each cost a different amount. Finance forecasts the day's margin from flat last-quarter rates; operations switches COD off with a rule of thumb. |
+| **Approach** | One LightGBM model predicts all five outcomes, calibrated on a window it never saw. A separate unit-economics table prices every order under every outcome, so expected margin is a dot product. COD is blocked when the card version of the order, times the chance the customer switches, is worth more than the COD version. |
+| **Result** | Test window, 73,024 orders over 122 days. Margin rule on 35,389 COD orders: **+22,258 (+0.72%)**, against **-2,113** for a risk score at the same block rate (difference 24,371, bootstrap 95% CI 21,580 to 27,556). Sale-week daily margin error: **4.3%** against **22.5%** for finance's flat rates. |
+| **What didn't win** | LightGBM barely beats logistic regression (log-loss 0.6469 against 0.6475). Isotonic calibration did nothing for the plain booster. Class weighting, the usual fix for a low macro-F1, put the four-month margin forecast 183% below realized. If real card conversion is 20 points below the assumed rate, the COD gain falls to +944. |
+
+## Architecture
+
+![Architecture walkthrough: order history and the hidden outcome process, features with a 14-day history lag, the five-outcome models and calibrators, unit economics, the COD rule and the truth-scored evaluation](docs/demo/architecture.gif)
+
+```mermaid
+flowchart LR
+    subgraph SRC["Sources"]
+        WORLD["Outcome process<br/>world.true_proba"]
+        GEN["Seeded generator<br/>scripts/generate_data.py<br/>generate.py"]
+        ORD[("data/orders.csv.gz<br/>341,880 orders")]
+        TRUTH[("data/truth/order_truth.csv.gz<br/>true p, actual and card")]
+        CFG[("Unit economics, time split<br/>config.py")]
+    end
+
+    subgraph FEAT["Data and features"]
+        LOAD["Loader + four time windows<br/>pipeline.load · split_masks"]
+        HIST["Customer history, 14-day lag<br/>features.customer_history"]
+        BUILD["23 model features<br/>features.build_features"]
+        SWITCH["Same order paid by card<br/>features.with_payment"]
+    end
+
+    subgraph MOD["Models"]
+        PRIOR["Class priors<br/>models.PriorModel"]
+        LOGIT["Multinomial logistic<br/>models.LogitModel"]
+        GBM["LightGBM, 5-class softmax<br/>models.GBMModel"]
+        CAL["Isotonic / Platt, one-vs-rest<br/>calibration.py"]
+    end
+
+    subgraph DEC["Decision"]
+        ECON["Margin under each outcome<br/>economics.outcome_margins"]
+        EM["Expected margin per order<br/>economics.expected_margin"]
+        CONV["Card conversion 40% / 60%<br/>assumed input · policy.conversion_rate"]
+        RULE["COD margin rule<br/>block when gain is positive<br/>pipeline.run"]
+        RISK["Risk-score baseline<br/>policy.risk_score"]
+    end
+
+    subgraph EVAL["Evaluation"]
+        MET["log-loss · macro-F1 · classwise ECE<br/>calibration.py"]
+        DAY["Daily margin error vs realized<br/>pipeline._daily_errors"]
+        SCORE["Policy scored on true p<br/>policy.score_policy · frontier"]
+        SENS["Conversion sensitivity + bootstrap CI<br/>pipeline.run"]
+    end
+
+    subgraph OUT["Outputs"]
+        REP["Report + figures<br/>report.py · plots.py"]
+        FILES[("outputs/<br/>report.md · metrics.csv · policy.csv · results.json")]
+    end
+
+    WORLD -->|"5 probabilities per order"| GEN
+    GEN --> ORD
+    GEN --> TRUTH
+    ORD -->|"orders + settled outcomes"| LOAD
+    LOAD -->|"orders"| HIST
+    HIST -->|"prior return, refusal, cancel rates"| BUILD
+    LOAD -->|"order fields"| BUILD
+    BUILD -->|"train + early-stop windows"| PRIOR
+    BUILD -->|"train Jan 24 - Feb 25"| LOGIT
+    BUILD -->|"train Jan 24 - Feb 25"| GBM
+    BUILD -->|"COD orders"| SWITCH
+    SWITCH -->|"card rows"| GBM
+    GBM -->|"raw p, n x 5"| CAL
+    LOGIT -->|"raw p, n x 5"| CAL
+    CAL -->|"calibrated p, n x 5"| EM
+    CFG -->|"fees, margins, resale loss"| ECON
+    ECON -->|"margin matrix, n x 5"| EM
+    EM -->|"E margin as COD and as card"| RULE
+    CONV -->|"share who switch"| RULE
+    CAL -->|"P failed + P cancelled"| RISK
+    RULE -->|"block flags"| SCORE
+    RISK -->|"block flags, same rate"| SCORE
+    TRUTH -->|"true p under both payments"| SCORE
+    PRIOR -->|"flat rates"| MET
+    CAL --> MET
+    EM -->|"expected margin per day"| DAY
+    SCORE --> SENS
+    MET --> REP
+    DAY --> REP
+    SCORE --> REP
+    SENS --> REP
+    REP --> FILES
+
+    GBM -.->|"early stop on Mar - Apr 25"| GBM
+    RULE -.->|"block rate fixed on May - Aug 25"| RISK
+    ORD -.->|"realized_margin"| DAY
+    TRUTH -.->|"ceiling arm"| MET
+    LOAD -.->|"missing address, device kept as NaN"| BUILD
+
+    classDef data fill:#7fa8ff,stroke:#3d6fd9,color:#0b1020
+    classDef model fill:#b9a2ff,stroke:#7a5fd6,color:#0b1020
+    classDef decision fill:#3fd8a8,stroke:#1f9c76,color:#0b1020
+    classDef evaluation fill:#f2c46d,stroke:#b8902f,color:#0b1020
+    classDef risk fill:#ff8a73,stroke:#cc5640,color:#0b1020
+
+    class WORLD,GEN,ORD,CFG,LOAD,HIST,BUILD,REP,FILES data
+    class PRIOR,LOGIT,GBM,CAL model
+    class ECON,EM,RULE,RISK decision
+    class TRUTH,MET,DAY,SCORE,SENS evaluation
+    class SWITCH,CONV risk
+```
+
+Solid edges are the data flow of one run; dotted edges are the loops, fallbacks and side inputs.
+Red nodes are the counterfactual and the assumption the COD result rests on: the card version of
+an order comes from switching one feature, and the conversion rate is an input, not a measurement.
+The truth file is read only by the evaluation.
+
+### Components
+
+| Component | Responsibility | File |
+|---|---|---|
+| Order history generator | Two years of orders, customers with hidden return, cancel and refusal tendencies, fraud accounts, calendar events, missing fields; writes orders and the truth file | [`scripts/generate_data.py`](scripts/generate_data.py), [`src/order_margin/generate.py`](src/order_margin/generate.py) |
+| Outcome process | The multinomial logit the outcomes are drawn from, under the actual payment and under card | [`src/order_margin/world.py`](src/order_margin/world.py) |
+| Constants | Outcome classes, unit economics per category, the four time windows, the card-conversion assumption, the seed | [`src/order_margin/config.py`](src/order_margin/config.py) |
+| Features | 20 numeric and 3 categorical columns; customer history from orders settled at least 14 days earlier; the payment switch | [`src/order_margin/features.py`](src/order_margin/features.py) |
+| Models | Class priors, multinomial logistic regression, LightGBM (plain and class-weighted), all returning an n x 5 probability matrix | [`src/order_margin/models.py`](src/order_margin/models.py) |
+| Calibration and metrics | Isotonic and Platt one-vs-rest with row renormalisation; classwise ECE on equal-mass bins, log-loss, macro-F1, count ratios | [`src/order_margin/calibration.py`](src/order_margin/calibration.py) |
+| Unit economics | Margin of every order under each of the five outcomes; expected margin as a dot product | [`src/order_margin/economics.py`](src/order_margin/economics.py) |
+| COD policy | Conversion rate, policy scoring on true probabilities, risk score, block-rate matching, frontier | [`src/order_margin/policy.py`](src/order_margin/policy.py) |
+| Orchestrator | Split, fit, calibrate, score every variant, run every COD policy, sensitivity and bootstrap, write outputs | [`src/order_margin/pipeline.py`](src/order_margin/pipeline.py), [`src/order_margin/cli.py`](src/order_margin/cli.py) |
+| Report and figures | `report.md` tables; reliability, daily margin and policy frontier plots | [`src/order_margin/report.py`](src/order_margin/report.py), [`src/order_margin/plots.py`](src/order_margin/plots.py) |
+
+### Design decisions
+
+The reasoning is recorded in [ADR-0001](docs/adr/0001-calibrated-probabilities-times-unit-economics.md).
+
+| Decision | Options considered | Chosen | Trade-off |
+|---|---|---|---|
+| Outcome model shape | Four binary models, one per bad outcome; a regressor on margin; one multiclass model | One five-class softmax, so the probabilities sum to one | One model to own instead of four, and no order can be 30% returned and 90% delivered; per-team models would be easier to hand out |
+| Where the money lives | Predict margin directly; price outcomes outside the model | `economics.py` prices every order under every outcome; expected margin is the dot product | Finance can change a fee without retraining, and the error splits by outcome; the probabilities must be calibrated for the product to mean anything |
+| Calibration | None; temperature scaling; Platt; isotonic | Isotonic and Platt one-vs-rest on May to August 2025, rows renormalised, both reported | A single temperature cannot fix class-specific error; on this data the plain booster needed neither, and isotonic only earned its place after class weighting |
+| Rare-class handling | Inverse-frequency class weights; none | No weighting in the shipped model; the weighted variant kept as the comparison | Weighting is the standard fix for low macro-F1 and it pushed predicted fraud to 16 times the observed count; leaving it out keeps macro-F1 low |
+| COD block rule | Rule of thumb; rank on P(failed) + P(cancelled); expected gain; causal uplift model | Expected gain, `conversion x E[margin, card] - E[margin, COD] > 0`, with the risk score at the same block rate as the baseline | Prices the counterfactual instead of the risk, but rests on a one-feature payment switch and an assumed conversion rate; uplift needs a randomised checkout holdout that does not exist yet |
+| Leakage and evaluation | Random split; history from all past orders; scoring policies with the deciding model | Four date windows; history only from orders at least 14 days old, shrunk towards fixed rates; policies scored on the generator's true probabilities | History is staler than it could be, and scoring on truth is only possible here; production needs a holdout instead |
+
+### Data contracts
+
+| Stage | Input | Output |
+|---|---|---|
+| Generator | seed, `DATA_START`..`DATA_END` | `orders.csv.gz`: `order_id, customer_id` (int), `order_ts` (datetime), `category, payment, zone` (str), `n_items` (int), `basket_value, discount_pct` (float), `coupon_used` (0/1), `promised_days, account_age_days` (int), `address_quality` (float, NaN when geocoding failed), `device_new` (0/1, NaN when missing), `phone_verified, is_peak, is_ramadan` (0/1), `outcome` (one of 5 classes), `realized_margin` (float). `truth/order_truth.csv.gz`: `order_id`, `p_<class>` and `p_card_<class>` (float x 10), `fraudster` |
+| Features | orders frame | 23 columns: 20 numeric (`log_value`, `prior_return_rate`, `days_since_last`, ...) and `category, payment, zone` as pandas categoricals with fixed levels |
+| Models and calibrators | features, integer labels in `CLASSES` order | `predict_proba -> (n, 5)` float, rows sum to 1, order `delivered, returned, cancelled, failed_delivery, fraud_chargeback` |
+| Unit economics | orders frame, optional payment override | `outcome_margins -> (n, 5)` float; `expected_margin(P, M) -> (n,)` float |
+| COD policy | block flags (bool, n), conversion (float, n), true expected margin as COD and as card (float, n) | `PolicyResult`: `blocked, orders_lost, margin_change`; frontier frame `blocked, orders_lost, margin_change` |
+| Outputs | `Results` | `metrics.csv` (one row per model variant: `log_loss, macro_f1, ece_mean, count_ratio_*, margin_bias_pct, daily_mape_*`), `policy.csv`, `conversion_sensitivity.csv`, `margin_error_by_outcome.csv`, `daily_margin.csv`, `policy_frontier.csv`, `results.json`, `report.md`, three PNGs |
+
+### Failure modes and fallbacks
+
+| Failure | What the code does |
+|---|---|
+| Outcome not yet known (returns and refusals settle days later) | History features count only orders placed at least 14 days earlier. A thin or new history is pulled towards fixed long-run rates with five pseudo-orders; `prior_cod_share` and `days_since_last` are left missing for a first order. A test flips an unresolved outcome and requires no feature to move. |
+| Address or device field missing (4 to 16% and 6% of orders) | LightGBM routes missing values natively; the logistic model imputes the median and adds a missing-value indicator column. |
+| Unseen category, payment or zone value | Categoricals have fixed levels, so an unknown value becomes missing for LightGBM; the logistic one-hot encoder ignores it. |
+| Probability outside the calibration range, or near zero | Isotonic clips inputs to the fitted range; every calibrated row is clipped at 1e-6 and renormalised, so log-loss and expected margin stay finite. |
+| Booster overfits or never converges | Early stopping on March to April 2025 with 100 rounds of patience, capped at 3,000 rounds; the plain booster stopped at 186. |
+| Model degrades or drifts | Not handled. Models and calibrators are refit on every run and nothing is monitored between runs; listed under limitations. |
+| Card-conversion assumption is wrong | Not detectable at run time. The run rescores the fixed decisions at 10, 20 and 30 points lower conversion and 10 points higher, and reports the result. |
+| Solver or LLM timeout | Not applicable: there is no solver, LLM, model server or network call in the pipeline. |
+
+### Path to production
+
+This is a mapping of each local piece to what would replace it in a deployed system, not a
+description of one that exists.
+
+| Here | Production equivalent |
+|---|---|
+| Seeded generator writing `data/orders.csv.gz` | Order and settlement tables in a warehouse (BigQuery, Snowflake or Redshift), partitioned by order date, with outcomes joined in as they settle |
+| `customer_history` in pandas with a 14-day lag | Point-in-time features in SQL window functions or a feature store (Feast, Vertex or SageMaker Feature Store), with the same as-of rule |
+| `make run` on a laptop | Scheduled jobs in Airflow or Step Functions: nightly batch scoring for finance's daily margin; weekly retrain and recalibration |
+| LightGBM and calibrator in one process | Booster and calibrator versioned together in a registry (MLflow, SageMaker or Vertex AI), promoted only if they beat the incumbent on log-loss, classwise ECE and sale-day margin error |
+| COD rule computed in batch | A low-latency scoring endpoint (SageMaker, Vertex AI or a container on Cloud Run) called at checkout with both payment versions of the basket; COD stays visible if the call fails or times out |
+| Conversion rate as a config input | A randomised holdout on the checkout prompt, then an uplift model of who switches to card |
+| Policies scored on the generator's true probabilities | Shadow mode, then a holdout comparing realized margin of blocked and unblocked COD orders |
+| `report.md` and the PNGs | Finance dashboard reconciling expected and ledger margin by day |
+| Monitoring (not built) | Weekly classwise ECE and predicted/observed count per outcome on settled orders; daily margin error against the ledger, split by sale days; feature drift on history rates and basket value; COD block share and orders lost; an alert when predicted fraud runs more than 1.5 times observed |
+
 ## The problem
 
 A regional marketplace ships around 470 orders a day, and roughly half of them are paid in
