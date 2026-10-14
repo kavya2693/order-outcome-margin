@@ -8,7 +8,7 @@
            person using it (right). Data is inlined by tools/inject_sheet.py between the SHEET markers. */
         #value-root {
           position: absolute; inset: 0;
-          --w-bg: #ffffff; --w-ink: #111827; --w-soft: #4b5563; --w-mute: #6b7280; --w-line: #d1d5db; --w-faint: #f3f4f6;
+          --w-bg: #ffffff; --w-ink: #111827; --w-soft: #4b5563; --w-mute: #4b5563; --w-line: #d1d5db; --w-faint: #f3f4f6;
           --w-data: #d97706; --w-model: #6d3cf0; --w-tools: #1f8fa8; --w-risk: #dc2b4a; --w-opt: #0f9f6e;
           color: var(--w-ink); font-family: Inter, "Helvetica Neue", sans-serif;
         }
@@ -27,7 +27,7 @@
 
         /* sheet */
         #value-root .sheet {
-          position: absolute; left: 120px; top: 280px; width: 1050px; height: 640px; border: 3px solid var(--w-line);
+          position: absolute; left: 120px; top: 300px; width: 1084px; height: 620px; border: 3px solid var(--w-line);
           border-radius: 24px; background: #fff; box-shadow: 0 18px 40px rgba(17, 24, 39, 0.08); overflow: hidden;
         }
         #value-root .sheet-head {
@@ -36,29 +36,29 @@
         }
         #value-root .sheet-head span:last-child { color: #c4b5fd; }
         #value-root .row {
-          position: relative; display: flex; align-items: center; height: 64px; padding: 0 26px;
-          font-family: "JetBrains Mono", monospace; font-size: 20px; color: var(--w-ink); border-bottom: 2px solid var(--w-faint);
+          position: relative; display: flex; align-items: center; height: 60px; padding: 0 20px;
+          font-family: "JetBrains Mono", monospace; font-size: 22px; color: var(--w-ink); border-bottom: 2px solid var(--w-faint);
         }
         #value-root .row.hdr { height: 54px; font-weight: 700; letter-spacing: 0.02em; color: var(--w-mute); background: #fafafa; }
         #value-root .row .tint { position: absolute; inset: 0; opacity: 0; }
-        #value-root .c { position: relative; white-space: nowrap; }
-        #value-root .c1 { width: 100px; display: flex; align-items: center; gap: 8px; font-weight: 700; }
+        #value-root .c { position: relative; white-space: nowrap; flex: 0 0 auto; }
+        #value-root .c1 { width: 104px; display: flex; align-items: center; gap: 8px; font-weight: 700; }
         #value-root .c1 i { display: block; width: 12px; height: 12px; border-radius: 3px; background: var(--w-line); flex: 0 0 auto; }
-        #value-root .c2 { width: 172px; padding-left: 8px; }
-        #value-root .c3 { width: 146px; }
-        #value-root .c4, #value-root .c5, #value-root .c6, #value-root .c7, #value-root .c8 { text-align: right; padding-right: 16px; }
-        #value-root .c4 { width: 84px; }
-        #value-root .c5 { width: 86px; }
-        #value-root .c6 { width: 90px; }
-        #value-root .c7 { width: 98px; }
-        #value-root .c8 { width: 92px; font-weight: 700; }
-        #value-root .c9 { width: 126px; padding-left: 8px; }
-        #value-root .act { display: inline-block; padding: 4px 10px; border-radius: 8px; font-size: 20px; font-weight: 700; color: #fff; }
-        #value-root .act.hide { background: var(--w-tools); }
-        #value-root .act.keep { background: var(--w-data); }
+        #value-root .c2 { width: 180px; padding-left: 6px; }
+        #value-root .c3 { width: 158px; }
+        #value-root .c4, #value-root .c5, #value-root .c6, #value-root .c7, #value-root .c8 { text-align: right; padding-right: 14px; }
+        #value-root .c4 { width: 93px; }
+        #value-root .c5 { width: 93px; }
+        #value-root .c6 { width: 93px; }
+        #value-root .c7 { width: 106px; }
+        #value-root .c8 { width: 82px; font-weight: 700; }
+        #value-root .c9 { width: 126px; padding-left: 4px; }
+        #value-root .act { display: inline-block; padding: 3px 8px; border-radius: 8px; font-size: 22px; font-weight: 700; color: #fff; }
+        #value-root .act.hide { background: #0e7490; }
+        #value-root .act.keep { background: #b45309; }
         #value-root .pos { color: #047857; }
         #value-root .neg { color: var(--w-mute); }
-        #value-root .more { padding: 14px 30px 0; font-family: "JetBrains Mono", monospace; font-size: 20px; color: var(--w-mute); }
+        #value-root .more { padding: 12px 30px 0; font-family: "JetBrains Mono", monospace; font-size: 22px; color: var(--w-mute); }
         #value-root .totals {
           position: absolute; left: 0; bottom: 0; width: 100%; height: 66px; display: flex; align-items: center; gap: 14px; padding: 0 30px;
           background: #ecfdf5; border-top: 2px solid #a7f3d0; font-size: 23px; font-weight: 700; color: #065f46; white-space: nowrap;
@@ -67,19 +67,21 @@
         #value-root .totals svg { position: absolute; left: 6px; top: 6px; width: 16px; height: 16px; }
 
         /* scene */
-        #value-root .scene-lab { position: absolute; font-family: "JetBrains Mono", monospace; font-size: 20px; font-weight: 700; letter-spacing: 0.14em; color: var(--w-mute); white-space: nowrap; }
-        #value-root .desk { position: absolute; left: 1220px; top: 312px; width: 600px; height: 120px; border-radius: 20px; background: var(--w-faint); }
+        #value-root .scene-lab { position: absolute; font-family: "JetBrains Mono", monospace; font-size: 22px; font-weight: 700; letter-spacing: 0.12em; color: var(--w-mute); white-space: nowrap; }
+        #value-root .subt { position: absolute; left: 120px; top: 248px; width: 1680px; font-size: 26px; font-weight: 500; color: var(--w-soft); }
+        #value-root .subt b { color: var(--w-ink); }
+        #value-root .desk { position: absolute; left: 1240px; top: 332px; width: 580px; height: 120px; border-radius: 20px; background: var(--w-faint); }
         #value-root .floor {
-          position: absolute; left: 1220px; top: 452px; width: 600px; height: 468px; border-radius: 24px; border: 3px solid var(--w-line);
+          position: absolute; left: 1240px; top: 472px; width: 580px; height: 448px; border-radius: 24px; border: 3px solid var(--w-line);
           background-color: #fbfbfc;
         }
         #value-root svg.layer { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: visible; }
         #value-root .meter {
-          position: absolute; left: 1244px; top: 834px; width: 552px; height: 76px; border-radius: 16px; background: #ecfdf5;
+          position: absolute; left: 1262px; top: 848px; width: 536px; height: 62px; border-radius: 16px; background: #ecfdf5;
           border: 2px solid #a7f3d0; display: flex; align-items: center; justify-content: space-between; padding: 0 24px;
         }
-        #value-root .meter .ml { font-family: "JetBrains Mono", monospace; font-size: 20px; color: #065f46; line-height: 1.25; white-space: nowrap; }
-        #value-root .meter .mv { font-family: "JetBrains Mono", monospace; font-variant-numeric: tabular-nums; font-size: 40px; font-weight: 700; color: var(--w-opt); }
+        #value-root .meter .ml { font-family: "JetBrains Mono", monospace; font-size: 22px; color: #065f46; line-height: 1.1; white-space: nowrap; }
+        #value-root .meter .mv { font-family: "JetBrains Mono", monospace; font-variant-numeric: tabular-nums; font-size: 40px; font-weight: 700; color: #047857; }
         #value-root .caption {
           position: absolute; left: 120px; top: 944px; width: 1700px; font-size: 30px; font-weight: 700; color: var(--w-ink);
         }
@@ -91,6 +93,7 @@
           <div class="kick" id="va-kick">07 · END-USER VALUE</div>
           <div class="ttl" id="va-ttl">What the <em>checkout ops lead</em> gets</div>
           <div class="uline" id="va-ul"></div>
+          <div class="subt" id="va-sub">Each row is one cash order on a sale-week day. <b>GAIN</b> = card margin × switch rate − COD margin; above 0 means hide COD.</div>
 
           <div class="sheet" id="va-sheet">
             <div class="sheet-head"><span id="va-head-l">COD DECISIONS · SALE WEEK</span><span id="va-head-r"></span></div>
@@ -104,10 +107,10 @@
             <div class="totals" id="va-totals"></div>
           </div>
 
-          <div class="scene-lab" id="va-lab-desk" style="left: 1220px; top: 280px">OPS LEAD · CHECKOUT RULES</div>
+          <div class="scene-lab" id="va-lab-desk" style="left: 1240px; top: 300px">OPS LEAD · CHECKOUT RULES</div>
           <div class="desk" id="va-desk"></div>
           <div class="floor" id="va-floor"></div>
-          <div class="scene-lab" id="va-lab-floor" style="left: 1244px; top: 466px">CUSTOMERS AT CHECKOUT</div>
+          <div class="scene-lab" id="va-lab-floor" style="left: 1262px; top: 486px">CUSTOMERS AT CHECKOUT</div>
           <svg class="layer" id="va-svg" viewBox="0 0 1920 1080"></svg>
           <div class="meter" id="va-meter">
             <div class="ml"><div>margin today vs</div><div>COD for everyone</div></div>
@@ -125,11 +128,11 @@
 
           const CONFIG = {
             duration: 13.0,
-            colors: ["#6d3cf0", "#d97706", "#1f8fa8", "#2563eb"], // one per animated checkout
-            phoneX: [1240, 1386, 1532, 1678],
-            phoneY: 512,
+            colors: ["#6d3cf0", "#b45309", "#0e7490", "#2563eb"], // one per animated checkout
+            phoneX: [1258, 1398, 1538, 1678],
+            phoneY: 532,
             phone: { w: 128, h: 268 },
-            person: { x: 1290, y: 380 },
+            person: { x: 1306, y: 400 },
           };
           const NS = "http://www.w3.org/2000/svg";
           const svg = document.getElementById("va-svg");
@@ -140,7 +143,7 @@
             return n;
           };
           const txt = (s, attrs, parent) => {
-            const t = el("text", Object.assign({ "font-family": "JetBrains Mono, monospace", "font-size": 20, "font-weight": 700, "text-anchor": "middle" }, attrs), parent);
+            const t = el("text", Object.assign({ "font-family": "JetBrains Mono, monospace", "font-size": 22, "font-weight": 700, "text-anchor": "middle" }, attrs), parent);
             t.textContent = s;
             return t;
           };
@@ -191,7 +194,7 @@
             el("rect", { x: x + 7, y: PY + 16, width: PW - 14, height: 34, rx: 8, fill: col }, ph);
             txt(String(r.order_id), { x: x + PW / 2, y: PY + 40, fill: "#fff" }, ph);
             txt(fmt(r.basket), { x: x + PW / 2, y: PY + 78, fill: "#4b5563", "font-weight": 400 }, ph);
-            txt("PAY", { x: x + PW / 2, y: PY + 112, fill: "#6b7280", "font-size": 20 }, ph);
+            txt("PAY", { x: x + PW / 2, y: PY + 112, fill: "#4b5563" }, ph);
             // payment buttons: neutral first, then the decision
             const bx = x + 16, bw = PW - 32;
             const cod = el("rect", { x: bx, y: PY + 124, width: bw, height: 40, rx: 8, fill: "#fff", stroke: "#9ca3af", "stroke-width": 2 }, ph);
@@ -218,12 +221,12 @@
             const dt = DECIDE0 + ti * 0.6;
             if (r.block) {
               tl.to(cod, { attr: { fill: "#f3f4f6", stroke: "#d1d5db" }, duration: 0.3 }, dt);
-              tl.to(codT, { attr: { fill: "#9ca3af" }, duration: 0.3 }, dt);
+              tl.to(codT, { attr: { fill: "#4b5563" }, duration: 0.3 }, dt);
               tl.fromTo(strike, { attr: { opacity: 0 } }, { attr: { opacity: 1 }, duration: 0.2 }, dt + 0.1);
-              tl.to(card, { attr: { fill: "#1f8fa8", stroke: "#1f8fa8" }, duration: 0.3 }, dt + 0.25);
+              tl.to(card, { attr: { fill: "#0e7490", stroke: "#0e7490" }, duration: 0.3 }, dt + 0.25);
               tl.to(cardT, { attr: { fill: "#ffffff" }, duration: 0.3 }, dt + 0.25);
             } else {
-              tl.to(cod, { attr: { fill: "#d97706", stroke: "#d97706" }, duration: 0.3 }, dt);
+              tl.to(cod, { attr: { fill: "#b45309", stroke: "#b45309" }, duration: 0.3 }, dt);
               tl.to(codT, { attr: { fill: "#ffffff" }, duration: 0.3 }, dt);
             }
             tl.fromTo(ok, { attr: { opacity: 0 } }, { attr: { opacity: 1 }, duration: 0.25 }, dt + 0.6);
@@ -237,6 +240,7 @@
           tl.fromTo("#va-kick", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, 0.5);
           tl.fromTo("#va-ttl", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, 0.55);
           tl.fromTo("#va-ul", { scaleX: 0 }, { scaleX: 1, duration: 0.5, ease: "power3.out" }, 0.9);
+          tl.fromTo("#va-sub", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 1.0);
           tl.fromTo("#va-sheet", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, 0.8);
           SHEET.rows.forEach((_, i) => tl.fromTo("#va-r" + i, { opacity: 0, x: -16 }, { opacity: 1, x: 0, duration: 0.35, ease: "power2.out" }, 1.3 + i * 0.3));
           tl.fromTo("#va-more", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 1.3 + SHEET.rows.length * 0.3);
@@ -247,6 +251,8 @@
           const mv = { v: 0 }, mEl = document.getElementById("va-meter-v");
           tl.to(mv, { v: SHEET.day_true_gain, duration: 3.0, ease: "power2.out", onUpdate: () => { mEl.textContent = "+" + fmt(mv.v); } }, DECIDE0);
           tl.fromTo("#va-caption", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, 9.4);
+          // text fades fully out before the wipe, so no two slides' text is ever on screen together
+          tl.to(["#va-kick", "#va-ttl", "#va-ul", "#va-sub", "#va-sheet", "#va-lab-desk", "#va-desk", "#va-floor", "#va-lab-floor", "#va-svg", "#va-meter", "#va-caption"], { opacity: 0, duration: 0.35, ease: "power2.in" }, D - 1.05);
           // wipe out (white -> dark), revealing the next dark scene underneath
           tl.to("#va-page", { clipPath: "inset(0px 0px 0px 100%)", duration: 0.7, ease: "power3.inOut" }, D - 0.7);
           tl.fromTo("#va-edge", { x: 0, opacity: 0 }, { x: 1920, opacity: 1, duration: 0.7, ease: "power3.inOut", immediateRender: false }, D - 0.7);

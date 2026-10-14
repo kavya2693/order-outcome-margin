@@ -7,9 +7,9 @@
 Which orders will lose money, how much the day will really earn, and when cash on delivery
 should be switched off: a five-outcome order model priced with unit economics.
 
-[![86-second silent walkthrough: the problem, how the model and the money fit together, the architecture, the daily margin forecast and COD frontier, a day of COD decisions, and the results](docs/demo/demo.gif)](https://kavya2693.github.io/work-demos/order-outcome-margin.mp4)
+[![88-second silent walkthrough: the problem, how the model and the money fit together, the architecture, the daily margin forecast and COD frontier, a day of COD decisions, the results, and the lesson and fix](docs/demo/demo.gif)](https://kavya2693.github.io/work-demos/order-outcome-margin.mp4)
 
-*86-second silent walkthrough. [Play the full video](https://kavya2693.github.io/work-demos/order-outcome-margin.mp4) · [download the MP4, 5.2 MB](docs/demo/demo.mp4).*
+*88-second silent walkthrough. [Play the full video](https://kavya2693.github.io/work-demos/order-outcome-margin.mp4) · [download the MP4, 5.5 MB](docs/demo/demo.mp4).*
 
 📄 **Audit report:** every figure and assumption in the video, traced to its source — [PDF](docs/demo/AUDIT_REPORT.pdf) · [Word](docs/demo/AUDIT_REPORT.docx) · [Markdown](docs/demo/AUDIT_REPORT.md)
 

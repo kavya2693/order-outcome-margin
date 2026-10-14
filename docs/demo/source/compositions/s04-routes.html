@@ -4,89 +4,81 @@
   <body>
     <template>
       <style>
+        /* 06 THE SYSTEM RUNNING: (A) expected vs realized margin for each of the 122 test days, from
+           outputs/daily_margin.csv; (B) the COD blocking frontier, from outputs/policy_frontier.csv and
+           outputs/policy.csv. Data is inlined by tools/export_run.py + tools/inject_sheet.py (RUN markers);
+           the SVG draws those numbers, nothing is retyped. */
         #routes-root { position: absolute; inset: 0; }
-        #routes-root .frame {
-          position: absolute; border-radius: 14px; border: 2px solid var(--line); overflow: hidden; background: #0b1722;
-        }
-        #routes-root .frame img { display: block; }
-        #routes-root .daily { left: 120px; top: 232px; width: 1684px; height: 519px; }
-        #routes-root .daily img { width: 1680px; height: 515px; }
-        #routes-root .sale {
-          position: absolute; left: 1238px; top: 236px; width: 116px; height: 470px; border: 3px dashed var(--c-eval); border-radius: 10px;
-        }
-        #routes-root .sale-lab {
-          position: absolute; left: 1150px; top: 196px; width: 292px; text-align: center; font-family: var(--mono); font-size: 22px;
-          font-weight: 700; color: var(--c-eval); letter-spacing: 0.08em;
-        }
-        #routes-root .keys { position: absolute; left: 120px; top: 772px; display: flex; gap: 34px; font-family: var(--mono); font-size: 22px; color: var(--ink-soft); }
+        #routes-root svg.plot { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: visible; }
+        #routes-root .ax { font-family: var(--mono); font-size: 22px; fill: #9fb0c2; }
+        #routes-root .axl { font-family: var(--sans); font-size: 24px; font-weight: 500; fill: #c8d3de; }
+        #routes-root .ptl { font-family: var(--sans); font-size: 24px; font-weight: 700; }
+        #routes-root .sal { font-family: var(--mono); font-size: 22px; font-weight: 700; fill: #f2c46d; letter-spacing: 0.06em; }
+        #routes-root .title-b { position: absolute; left: 120px; top: 118px; width: 1680px; font-size: 52px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.12; color: var(--ink); }
+        #routes-root .keys { position: absolute; left: 230px; top: 800px; display: flex; gap: 34px; font-family: var(--mono); font-size: 22px; color: var(--ink-soft); }
         #routes-root .keys span { display: flex; align-items: center; gap: 12px; white-space: nowrap; }
         #routes-root .keys i { display: block; width: 34px; height: 5px; border-radius: 3px; }
         #routes-root .call {
-          position: absolute; left: 120px; top: 838px; width: 1680px; padding: 20px 28px; border-radius: 12px;
+          position: absolute; left: 120px; top: 858px; width: 1680px; padding: 18px 28px; border-radius: 12px;
           border: 2px solid rgba(242, 196, 109, 0.5); background: rgba(242, 196, 109, 0.07);
           font-size: 30px; line-height: 1.35; color: var(--ink);
         }
         #routes-root .call b { font-family: var(--mono); color: var(--c-eval); }
-        #routes-root .call b.ok { color: #6ea8ff; }
+        #routes-root .call b.ok { color: var(--c-opt); }
         /* phase B */
-        #routes-root .front { left: 120px; top: 232px; width: 1064px; height: 604px; }
-        #routes-root .front img { width: 1060px; height: 600px; transform-origin: 720px 50px; }
-        #routes-root .axis { position: absolute; left: 120px; top: 852px; width: 1064px; font-family: var(--mono); font-size: 22px; color: var(--ink-mute); }
-        #routes-root .panel { position: absolute; left: 1240px; top: 232px; width: 560px; }
+        #routes-root .panel { position: absolute; left: 1250px; top: 262px; width: 550px; }
         #routes-root .lg { display: flex; flex-direction: column; gap: 12px; font-family: var(--mono); font-size: 22px; color: var(--ink-soft); }
         #routes-root .lg span { display: flex; align-items: center; gap: 14px; white-space: nowrap; }
-        #routes-root .lg i { display: block; width: 34px; height: 5px; border-radius: 3px; }
-        #routes-root .pol { margin-top: 34px; display: flex; flex-direction: column; gap: 16px; }
+        #routes-root .pol { margin-top: 30px; display: flex; flex-direction: column; gap: 16px; }
         #routes-root .prow {
-          display: flex; justify-content: space-between; align-items: center; padding: 18px 22px; border-radius: 12px;
+          display: flex; justify-content: space-between; align-items: center; padding: 16px 22px; border-radius: 12px;
           border: 2px solid var(--line); background: var(--panel);
         }
         #routes-root .prow .n { font-size: 26px; font-weight: 700; color: var(--ink); line-height: 1.2; }
-        #routes-root .prow .n small { display: block; font-family: var(--mono); font-size: 20px; font-weight: 400; color: var(--ink-mute); }
+        #routes-root .prow .n small { display: block; margin-top: 2px; font-size: 22px; font-weight: 500; color: var(--ink-soft); }
         #routes-root .prow .v { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 38px; font-weight: 700; white-space: nowrap; }
         #routes-root .prow.win { border-color: rgba(63, 216, 168, 0.7); background: #0f2629; }
         #routes-root .prow.win .v { color: var(--c-opt); }
         #routes-root .prow.risk .v { color: var(--c-risk); }
-        #routes-root .prow.all .v { color: var(--ink-mute); }
-        #routes-root .pnote { margin-top: 26px; font-size: 26px; line-height: 1.4; color: var(--ink-soft); }
+        #routes-root .prow.all .v { color: var(--ink-soft); }
+        #routes-root .pnote { margin-top: 24px; font-size: 24px; font-weight: 500; line-height: 1.4; color: var(--ink-soft); }
       </style>
 
       <div id="routes-root" data-composition-id="routes" data-width="1920" data-height="1080">
         <div class="scene" id="routes-in">
           <div class="eyebrow" data-layout-allow-overlap id="routes-eyebrow">06 · The system running</div>
-          <div class="scene-title" data-layout-allow-overlap id="routes-title">122 test days: the margin each model expected, against what landed.</div>
-          <div class="scene-title" data-layout-allow-overlap id="routes-title-b">Blocking COD: margin gained against orders lost.</div>
 
-          <!-- phase A: daily margin, outputs/daily_margin.png -->
+          <!-- phase A: daily margin -->
           <div id="routes-a">
-            <div class="frame daily" id="routes-daily"><img src="assets/plot-daily.png" alt="expected vs realized daily margin" id="routes-img-d" data-layout-allow-overflow /></div>
-            <div class="sale" id="routes-sale" data-layout-allow-overlap></div>
-            <div class="sale-lab" id="routes-sale-lab" data-layout-allow-overlap>SALE WEEK</div>
+            <div class="scene-title" data-layout-allow-overlap id="routes-title">122 test days: the margin each model expected, against what landed.</div>
+            <div class="scene-sub" id="routes-sub-a">Each line is one day's total margin. White is what really landed; the closer a line hugs it, the better.</div>
+            <svg class="plot" id="routes-svg-a" viewBox="0 0 1920 1080"></svg>
             <div class="keys" id="routes-keys">
-              <span><i style="background: #ffffff"></i>realized</span>
-              <span><i style="background: #2f6fe0"></i>LightGBM + isotonic</span>
-              <span><i style="background: #5cc98a"></i>flat class rates</span>
-              <span><i style="background: #d4506a"></i>class-weighted LightGBM</span>
+              <span><i style="background: #eef2f6"></i>what landed</span>
+              <span><i style="background: #3fd8a8"></i>LightGBM, calibrated</span>
+              <span><i style="background: #f2c46d"></i>flat averages (finance today)</span>
+              <span><i style="background: #ff8a73"></i>class-weighted LightGBM</span>
             </div>
-            <div class="call" id="routes-call">Sale days: flat class rates miss the day's margin by <b>22.5%</b>, LightGBM + isotonic by <b class="ok">4.3%</b>. Class weighting forecasts a loss every day.</div>
+            <div class="call" id="routes-call">On sale days, flat averages miss the day's margin by <b>22.5%</b>, the calibrated LightGBM by <b class="ok">4.3%</b>. Class weighting forecasts a loss every day.</div>
           </div>
 
-          <!-- phase B: COD policy frontier, outputs/policy_frontier.png -->
+          <!-- phase B: COD frontier -->
           <div id="routes-b">
-            <div class="frame front" id="routes-front"><img src="assets/plot-frontier.png" alt="COD policy frontier" id="routes-img-f" data-layout-allow-overflow /></div>
-            <div class="axis" id="routes-axis">x: orders lost (log) · y: margin change · 35,389 COD orders</div>
+            <div class="title-b" id="routes-title-b">Hiding COD: margin gained against orders lost.</div>
+            <div class="scene-sub" id="routes-sub-b">Each curve hides COD from more orders, left to right. Higher is better; further right loses more orders.</div>
+            <svg class="plot" id="routes-svg-b" viewBox="0 0 1920 1080"></svg>
             <div class="panel" id="routes-panel">
-              <div class="lg">
-                <span><i style="background: #2f6fe0"></i>rank by margin gain (model)</span>
-                <span><i style="background: #d4506a"></i>rank by risk score</span>
-                <span><i style="background: #5cc98a"></i>rank by margin gain (true p)</span>
+              <div class="lg" id="routes-lg">
+                <span><svg width="34" height="8"><path d="M2 4h30" stroke="#3fd8a8" stroke-width="5" /></svg>rank by margin gain (model)</span>
+                <span><svg width="34" height="8"><path d="M2 4h30" stroke="#ff8a73" stroke-width="5" /></svg>rank by risk score</span>
+                <span><svg width="34" height="8"><path d="M2 4h30" stroke="#c8d3de" stroke-width="4" stroke-dasharray="6 5" /></svg>perfect knowledge (ceiling)</span>
               </div>
               <div class="pol">
-                <div class="prow win" id="routes-p1"><div class="n">Margin rule<small>15.5% of COD hidden</small></div><div class="v" id="routes-v1">+0</div></div>
-                <div class="prow risk" id="routes-p2"><div class="n">Risk score<small>same block rate</small></div><div class="v" id="routes-v2">0</div></div>
-                <div class="prow all" id="routes-p3"><div class="n">Block every COD<small>14,469 orders lost</small></div><div class="v" id="routes-v3">0</div></div>
+                <div class="prow win" id="routes-p1"><div class="n">Margin rule<small>hidden on 15.5% of COD orders</small></div><div class="v" id="routes-v1">+0</div></div>
+                <div class="prow risk" id="routes-p2"><div class="n">Risk score<small>same share hidden</small></div><div class="v" id="routes-v2">0</div></div>
+                <div class="prow all" id="routes-p3"><div class="n">Hide COD for all<small>14,469 orders lost</small></div><div class="v" id="routes-v3">0</div></div>
               </div>
-              <div class="pnote" id="routes-note">Decided by LightGBM + isotonic, scored on the generator's true probabilities.</div>
+              <div class="pnote" id="routes-note">35,389 COD orders. Decided by the calibrated LightGBM, scored on the simulator's true odds.</div>
             </div>
           </div>
         </div>
@@ -94,38 +86,128 @@
 
       <script>
         (() => {
+          /* RUN:BEGIN */ const RUN = {"daily":[[0,24113,22008,24925,-18930],[0,23537,22972,20540,-18145],[0,20536,20451,20645,-14154],[0,30123,26241,28118,-18986],[0,31109,29476,29834,-23590],[0,20828,19260,21479,-13799],[0,21088,18442,19452,-15402],[0,20576,18733,19785,-13155],[0,16024,17976,18802,-15116],[0,20008,20612,21267,-16828],[0,23114,25078,25280,-19217],[0,28551,23447,25072,-20648],[0,21272,21188,21540,-19134],[0,27524,24591,26150,-16325],[0,24681,23851,23764,-21774],[0,22900,22284,22461,-20573],[0,19128,19330,20266,-14805],[0,21140,18848,20699,-15016],[0,23913,21541,21229,-18330],[0,26131,23502,24527,-20001],[0,15988,19007,19800,-15907],[0,18303,19988,19858,-14463],[0,22939,23282,23643,-17243],[0,20412,22976,22268,-20206],[0,21499,21947,22634,-17389],[0,24364,22735,23598,-17453],[0,18394,21903,21014,-17881],[0,18505,20093,20225,-18389],[0,17042,19816,18055,-17195],[0,16879,16810,18927,-10259],[0,20877,17427,20212,-11701],[0,20202,21494,22890,-14006],[0,28037,24334,25944,-16549],[0,28275,29583,30110,-18644],[0,22604,27546,26696,-23632],[0,20062,16533,18405,-11159],[0,18514,16765,18516,-12270],[0,20829,21033,22298,-14264],[0,27392,29300,28425,-17604],[0,25543,21614,24757,-15831],[0,21264,21786,23196,-13340],[0,22502,24446,23231,-21623],[0,8325,19358,20580,-21047],[0,20858,21403,20376,-17226],[0,16040,22099,19887,-16632],[0,27702,29017,29358,-23842],[0,27375,26718,26409,-24753],[0,19662,20964,21688,-16885],[0,19871,21151,22255,-18318],[0,25180,22612,23013,-19146],[0,20634,17229,17568,-14026],[0,21631,20790,22802,-13299],[0,20884,23821,21865,-22676],[0,19290,22531,23954,-18650],[0,30796,26843,27937,-19874],[0,26509,23718,24981,-17661],[0,25099,23067,24876,-18525],[0,22012,20219,22383,-12711],[0,20635,19526,19640,-15812],[0,23952,27488,27937,-25101],[0,18409,24079,22338,-23132],[0,21883,20917,23781,-12542],[0,24509,20564,22060,-15454],[0,19996,20842,21155,-18430],[0,24090,19925,21154,-16386],[0,21863,20655,21523,-14188],[0,20386,19560,21101,-20817],[0,30292,27206,28638,-22326],[0,23010,24642,22731,-22643],[0,26138,24430,25101,-16115],[0,18844,19292,20932,-11001],[1,34875,46899,35557,-48312],[0,21679,21403,20101,-18713],[0,24192,24839,23844,-18282],[0,27874,25347,26063,-20088],[0,28664,26782,27715,-17750],[0,20518,20378,20920,-16629],[0,21629,22562,21511,-18870],[0,22214,18798,19989,-14527],[0,23031,24367,26236,-16354],[0,24650,22759,22976,-15661],[1,51391,61228,50861,-54462],[1,49614,59020,49754,-49959],[1,37562,47230,35674,-47110],[1,43236,52786,45059,-50239],[1,44158,48825,41543,-44602],[1,40660,48540,38909,-47557],[1,41771,48746,39824,-43521],[1,43469,54291,45624,-49325],[1,48318,64470,53508,-61827],[0,23624,21604,23480,-15423],[0,26112,25093,27313,-20614],[0,23402,24323,26200,-15457],[0,22752,23073,23329,-18584],[0,35163,30884,32125,-24241],[0,25135,26511,28325,-19244],[0,31142,28786,27415,-27497],[0,26736,26442,28126,-21763],[0,29168,25843,27910,-17849],[0,26754,22240,24590,-18339],[0,27676,25242,26748,-17035],[0,28155,26250,27347,-21546],[0,28395,26827,30393,-20185],[0,28895,26032,27234,-21683],[0,26856,24935,25021,-18841],[0,25341,23502,24026,-20148],[0,22367,23350,21588,-21997],[0,26172,23588,23824,-20458],[0,25016,23692,24751,-20943],[0,29313,27558,30139,-16875],[0,33455,29448,32106,-19441],[0,22379,21880,22313,-19102],[0,26237,24712,24699,-19341],[0,25966,26308,26464,-23335],[0,19807,21867,21339,-14637],[0,22105,25786,23011,-25465],[0,22681,24193,25640,-18439],[0,29422,29318,29446,-23886],[0,20942,23493,23095,-23176],[0,19566,22596,21454,-19438],[0,22805,23102,23512,-16814],[0,23544,23264,24462,-18408]],"frontier":{"margin gain, gbm + isotonic":[[0.0,0],[0.4,375],[0.8,497],[1.2,537],[2.0,676],[2.4,720],[3.2,715],[4.4,833],[5.6,939],[7.6,1106],[10.0,1247],[12.8,1352],[16.8,1467],[22.4,1628],[29.2,1865],[38.4,2186],[50.0,2482],[65.6,2976],[86.0,3565],[112.6,4156],[148.0,5028],[193.4,5972],[253.0,7230],[332.8,8772],[357.0,9190],[434.8,10558],[569.8,12595],[715.2,14625],[745.4,14964],[975.4,17222],[1073.8,18236],[1275.6,19682],[1432.0,20755],[1670.8,21764],[1790.4,21992],[2150.0,22344],[2187.0,22336],[2508.4,21680],[2861.2,20107],[2866.8,20087],[3222.4,17773],[3581.4,14654],[3741.0,13133],[3940.2,11212],[4299.4,7242],[4658.8,2703],[4896.4,-568],[5018.6,-2324],[5378.2,-7642],[5741.0,-13812],[6102.6,-20804],[6416.6,-27265],[6463.4,-28183],[6824.2,-36492],[7182.2,-45423],[7542.8,-55145],[7901.0,-65662],[8263.0,-76916],[8399.2,-81410],[8624.2,-88792],[8987.0,-101851],[9347.8,-115486],[9710.2,-130105],[10073.0,-145560],[10433.4,-162309],[10796.8,-180213],[11006.4,-190906],[11159.4,-198999],[11520.2,-219642],[11883.4,-241914],[12247.8,-266231],[12610.8,-292890],[12977.2,-322106],[13339.8,-354792],[13709.0,-392779],[14079.8,-438001],[14468.6,-509868]],"risk score, gbm + isotonic":[[0.0,0],[0.4,41],[0.8,35],[1.2,46],[2.0,99],[2.4,100],[3.2,136],[4.4,204],[5.6,250],[7.8,421],[10.2,619],[13.2,875],[17.2,1500],[23.0,1931],[30.6,2038],[41.0,2211],[52.8,2506],[69.0,2885],[90.6,3036],[117.6,3434],[153.8,3966],[200.4,4423],[261.0,5218],[342.6,5996],[367.4,6187],[448.8,6887],[586.8,7857],[735.0,8111],[765.2,8133],[999.4,8253],[1097.2,8044],[1302.4,7482],[1460.0,6429],[1704.0,4761],[1827.4,2953],[2188.0,60],[2225.0,-408],[2548.8,-4255],[2907.4,-11321],[2913.2,-11468],[3282.2,-21643],[3654.0,-37928],[3818.6,-46614],[4025.2,-55194],[4398.4,-78160],[4769.2,-97556],[5014.8,-111921],[5140.2,-118457],[5507.0,-140897],[5874.6,-161454],[6241.0,-181557],[6558.0,-196805],[6606.8,-199497],[6968.8,-218604],[7334.0,-237160],[7697.4,-255746],[8060.2,-273819],[8419.6,-291422],[8555.8,-297406],[8780.4,-308491],[9140.6,-326136],[9499.8,-341778],[9857.8,-355366],[10215.0,-370313],[10570.2,-383596],[10925.0,-396652],[11130.8,-404626],[11280.2,-410402],[11634.8,-424645],[11989.0,-437794],[12344.0,-448491],[12698.4,-459130],[13052.4,-471153],[13406.4,-482053],[13760.4,-492530],[14114.6,-501144],[14468.6,-509868]],"margin gain, true probabilities":[[0.0,0],[0.4,375],[0.8,739],[1.2,891],[2.0,1113],[2.4,1201],[3.2,1357],[4.4,1539],[5.6,1710],[7.6,1975],[10.0,2262],[13.0,2568],[17.0,2961],[22.8,3482],[29.6,4038],[39.4,4714],[51.0,5466],[66.8,6368],[88.8,7451],[117.0,8728],[152.8,10251],[199.4,12036],[260.6,14166],[339.8,16649],[365.2,17351],[444.6,19446],[581.0,22566],[728.2,25403],[758.4,25934],[989.8,29323],[1087.8,30479],[1291.8,32391],[1446.8,33476],[1687.6,34624],[1808.6,35007],[2167.4,35478],[2204.8,35468],[2527.6,34957],[2881.4,33632],[2887.0,33604],[3246.6,31492],[3607.2,28684],[3766.2,27231],[3965.2,25260],[4323.6,21274],[4683.0,16748],[4920.6,13454],[5043.2,11670],[5403.6,6008],[5764.0,-245],[6124.6,-7143],[6436.4,-13669],[6483.8,-14688],[6846.8,-22927],[7208.0,-31902],[7568.8,-41610],[7928.2,-52107],[8288.8,-63417],[8425.4,-67899],[8650.0,-75530],[9007.6,-88489],[9369.8,-102346],[9733.0,-117178],[10095.0,-133059],[10458.0,-150045],[10819.6,-168200],[11028.6,-179316],[11181.6,-187719],[11545.4,-208746],[11908.0,-231457],[12271.8,-256168],[12636.0,-283306],[12999.6,-313282],[13362.8,-346724],[13726.8,-385243],[14093.6,-431790],[14468.6,-509868]]},"points":{"margin_rule":[2227.8,22258],"rule_of_thumb":[403.8,-25412],"block_all":[14468.6,-509868],"risk_score":[2360.2,-2113]}}; /* RUN:END */
+
+          const NS = "http://www.w3.org/2000/svg";
+          const el = (tag, attrs, parent) => {
+            const n = document.createElementNS(NS, tag);
+            Object.entries(attrs).forEach(([k, v]) => n.setAttribute(k, v));
+            parent.appendChild(n);
+            return n;
+          };
+          const txt = (parent, x, y, s, cls, anchor, fill) => {
+            const t = el("text", { x, y, class: cls, "text-anchor": anchor || "middle" }, parent);
+            if (fill) t.setAttribute("fill", fill);
+            t.textContent = s;
+            return t;
+          };
+          const k = (v) => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v / 1000) + "k";
           const tl = gsap.timeline({ paused: true });
           const D = 14.6;
-          const fmt = (v) => (v >= 0 ? "+" : "−") + Math.abs(Math.round(v)).toLocaleString("en-US");
+
+          // ---------------- phase A: expected vs realized margin per day ----------------
+          const A = document.getElementById("routes-svg-a");
+          const X0 = 230, X1 = 1800, Y0 = 262, Y1 = 742, YMIN = -70000, YMAX = 70000;
+          const days = RUN.daily, n = days.length;
+          const sx = (i) => X0 + (i / (n - 1)) * (X1 - X0);
+          const sy = (v) => Y1 - ((v - YMIN) / (YMAX - YMIN)) * (Y1 - Y0);
+          const axA = el("g", { id: "routes-axes-a" }, A);
+          el("rect", { x: X0, y: Y0, width: X1 - X0, height: Y1 - Y0, fill: "rgba(15,26,38,0.55)", stroke: "#24364a", "stroke-width": 2, rx: 8 }, axA);
+          // sale days (the peak flag in the repo output), shaded behind the lines
+          const step = (X1 - X0) / (n - 1);
+          days.forEach((d, i) => {
+            if (d[0] === 1) el("rect", { x: sx(i) - step / 2, y: Y0 + 2, width: step, height: Y1 - Y0 - 4, fill: "rgba(242,196,109,0.16)" }, axA);
+          });
+          [-60000, -40000, -20000, 0, 20000, 40000, 60000].forEach((v) => {
+            el("line", { x1: X0, x2: X1, y1: sy(v), y2: sy(v), stroke: v === 0 ? "#5d7086" : "#1c2b3b", "stroke-width": 2 }, axA);
+            txt(axA, X0 - 14, sy(v) + 8, k(v), "ax", "end");
+          });
+          [["1 Sep", 0], ["1 Oct", 30], ["1 Nov", 61], ["1 Dec", 91], ["31 Dec", 121]].forEach(([s, i]) => txt(axA, sx(i), Y1 + 34, s, "ax"));
+          const yl = txt(axA, 0, 0, "margin per day", "axl");
+          yl.setAttribute("transform", "translate(" + (X0 - 100) + " " + (Y0 + Y1) / 2 + ") rotate(-90)");
+          const saleIdx = days.map((d, i) => (d[0] === 1 ? i : -1)).filter((i) => i >= 0);
+          txt(axA, (sx(saleIdx[0]) + sx(saleIdx[saleIdx.length - 1])) / 2, Y0 - 12, "SALE DAYS (shaded)", "sal");
+          // series: [column index, colour, width]; what landed is drawn last so it sits on top
+          const series = [[4, "#ff8a73", 2.5], [2, "#f2c46d", 2.5], [3, "#3fd8a8", 3], [1, "#eef2f6", 3]];
+          const lineA = series.map(([c, col, w], j) => {
+            const d = days.map((r, i) => (i ? "L" : "M") + sx(i).toFixed(1) + " " + sy(r[c]).toFixed(1)).join("");
+            return el("path", { id: "routes-la" + j, d, fill: "none", stroke: col, "stroke-width": w, "stroke-linejoin": "round", pathLength: 1, "stroke-dasharray": "1 1", "stroke-dashoffset": 1 }, A);
+          });
+
           tl.fromTo("#routes-in", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 0);
           tl.fromTo("#routes-eyebrow", { opacity: 0, x: -24 }, { opacity: 1, x: 0, duration: 0.5, ease: "power2.out" }, 0.1);
           tl.fromTo("#routes-title", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.7, ease: "power3.out" }, 0.2);
-          // phase A: the 122 days draw in left to right
-          tl.fromTo("#routes-daily", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 0.5);
-          tl.fromTo("#routes-img-d", { clipPath: "inset(0px 100% 0px 0px)" }, { clipPath: "inset(0px 0% 0px 0px)", duration: 3.0, ease: "power1.inOut" }, 0.6);
+          tl.fromTo("#routes-sub-a", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 0.5);
+          tl.fromTo("#routes-axes-a", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 0.6);
+          lineA.forEach((p, j) => tl.fromTo(p, { attr: { "stroke-dashoffset": 1 } }, { attr: { "stroke-dashoffset": 0 }, duration: 2.4, ease: "power1.inOut" }, 0.8 + j * 0.12));
           tl.fromTo("#routes-keys", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, 1.0);
-          tl.fromTo(["#routes-sale", "#routes-sale-lab"], { opacity: 0 }, { opacity: 1, duration: 0.5 }, 3.2);
-          tl.fromTo("#routes-sale", { scale: 1 }, { scale: 1.04, duration: 0.5, ease: "sine.inOut", yoyo: true, repeat: 3 }, 3.4);
-          tl.fromTo("#routes-call", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, 3.8);
-          // phase B: the COD policy
+          tl.fromTo("#routes-call", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, 3.6);
+
+          // ---------------- phase B: the COD frontier ----------------
+          const B = document.getElementById("routes-svg-b");
+          const BX0 = 250, BX1 = 1150, BY0 = 262, BY1 = 772, BMIN = -60000, BMAX = 40000;
+          const LMAX = 1 + Math.log10(16000 / 100);
+          const f = (x) => (x <= 100 ? x / 100 : 1 + Math.log10(x / 100)); // the repo plot's axis: linear below 100, log above
+          const bx = (x) => BX0 + (f(x) / LMAX) * (BX1 - BX0);
+          const by = (v) => BY1 - ((v - BMIN) / (BMAX - BMIN)) * (BY1 - BY0);
+          const axB = el("g", { id: "routes-axes-b" }, B);
+          el("rect", { x: BX0, y: BY0, width: BX1 - BX0, height: BY1 - BY0, fill: "rgba(15,26,38,0.55)", stroke: "#24364a", "stroke-width": 2, rx: 8 }, axB);
+          [-60000, -40000, -20000, 0, 20000, 40000].forEach((v) => {
+            el("line", { x1: BX0, x2: BX1, y1: by(v), y2: by(v), stroke: v === 0 ? "#5d7086" : "#1c2b3b", "stroke-width": 2 }, axB);
+            txt(axB, BX0 - 14, by(v) + 8, k(v), "ax", "end");
+          });
+          [[0, "0"], [100, "100"], [1000, "1,000"], [10000, "10,000"]].forEach(([v, s]) => txt(axB, bx(v), BY1 + 34, s, "ax"));
+          txt(axB, (BX0 + BX1) / 2, BY1 + 74, "orders lost: customers who do not switch to card →", "axl");
+          const ylb = txt(axB, 0, 0, "margin change →", "axl");
+          ylb.setAttribute("transform", "translate(" + (BX0 - 110) + " " + (BY0 + BY1) / 2 + ") rotate(-90)");
+          const cp = el("clipPath", { id: "routes-clip" }, el("defs", {}, B));
+          el("rect", { x: BX0, y: BY0, width: BX1 - BX0, height: BY1 - BY0 }, cp);
+          const curves = [
+            ["margin gain, true probabilities", "#c8d3de", 3, "8 7"],
+            ["risk score, gbm + isotonic", "#ff8a73", 3.5, null],
+            ["margin gain, gbm + isotonic", "#3fd8a8", 4, null],
+          ];
+          const gB = el("g", { "clip-path": "url(#routes-clip)" }, B);
+          const lineB = curves.map(([name, col, w, dash], j) => {
+            const d = RUN.frontier[name].map((p, i) => (i ? "L" : "M") + bx(p[0]).toFixed(1) + " " + by(p[1]).toFixed(1)).join("");
+            const g = el("g", { id: "routes-lb" + j, opacity: 0 }, gB);
+            const a = { d, fill: "none", stroke: col, "stroke-width": w, "stroke-linejoin": "round" };
+            if (dash) a["stroke-dasharray"] = dash;
+            el("path", a, g);
+            return g;
+          });
+          const P = RUN.points;
+          const dots = [
+            ["margin_rule", "#3fd8a8", "margin rule", -24, -6, "end"],
+            ["risk_score", "#ff8a73", "risk score", -20, 38, "end"],
+            ["rule_of_thumb", "#c8d3de", "rule of thumb", 0, 44, "middle"],
+          ].map(([key, col, label, dx, dy, anchor], j) => {
+            const g = el("g", { id: "routes-dot" + j, opacity: 0 }, B);
+            const [x, y] = P[key];
+            el("circle", { cx: bx(x), cy: by(y), r: 9, fill: col, stroke: "#0a1119", "stroke-width": 3 }, g);
+            txt(g, bx(x) + dx, by(y) + dy, label, "ptl", anchor, col);
+            return g;
+          });
+
           const P2 = 7.2;
-          tl.to(["#routes-a", "#routes-title"], { opacity: 0, duration: 0.4, ease: "power2.in" }, P2 - 0.4);
+          tl.to("#routes-a", { opacity: 0, duration: 0.4, ease: "power2.in" }, P2 - 0.4);
+          tl.fromTo("#routes-b", { opacity: 0 }, { opacity: 1, duration: 0.01 }, P2);
           tl.fromTo("#routes-title-b", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, P2 + 0.05);
-          tl.fromTo("#routes-front", { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: 0.6, ease: "power3.out" }, P2);
-          tl.fromTo("#routes-axis", { opacity: 0 }, { opacity: 1, duration: 0.4 }, P2 + 0.4);
-          tl.fromTo("#routes-panel .lg", { opacity: 0 }, { opacity: 1, duration: 0.5 }, P2 + 0.5);
-          const vals = [[22258, "#routes-v1"], [-2113, "#routes-v2"], [-509868, "#routes-v3"]];
-          vals.forEach(([v, sel], i) => {
+          tl.fromTo("#routes-sub-b", { opacity: 0 }, { opacity: 1, duration: 0.5 }, P2 + 0.3);
+          tl.fromTo("#routes-axes-b", { opacity: 0 }, { opacity: 1, duration: 0.5 }, P2 + 0.3);
+          lineB.forEach((g, j) => tl.fromTo(g, { opacity: 0 }, { opacity: 1, duration: 0.6 }, P2 + 0.6 + j * 0.35));
+          dots.forEach((g, j) => tl.fromTo(g, { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power2.out" }, P2 + 1.9 + j * 0.25));
+          tl.fromTo("#routes-lg", { opacity: 0 }, { opacity: 1, duration: 0.5 }, P2 + 0.5);
+          const fmt = (v) => (v >= 0 ? "+" : "−") + Math.abs(Math.round(v)).toLocaleString("en-US");
+          [[P.margin_rule[1], "#routes-v1"], [P.risk_score[1], "#routes-v2"], [P.block_all[1], "#routes-v3"]].forEach(([v, sel], i) => {
             const at = P2 + 1.0 + i * 0.45;
             tl.fromTo("#routes-p" + (i + 1), { opacity: 0, x: 24 }, { opacity: 1, x: 0, duration: 0.5, ease: "power3.out" }, at);
-            const o = { v: 0 }, el = document.querySelector(sel);
-            tl.to(o, { v, duration: 1.4, ease: "power3.out", onUpdate: () => { el.textContent = fmt(o.v); } }, at + 0.2);
+            const o = { v: 0 }, e = document.querySelector(sel);
+            tl.to(o, { v, duration: 1.4, ease: "power3.out", onUpdate: () => { e.textContent = fmt(o.v); } }, at + 0.2);
           });
           tl.fromTo("#routes-note", { opacity: 0 }, { opacity: 1, duration: 0.5 }, P2 + 2.8);
-          // camera: zoom into the top of the frontier, where the useful policies sit
-          tl.fromTo("#routes-img-f", { scale: 1 }, { scale: 1.7, duration: 1.6, ease: "power2.inOut" }, P2 + 3.4);
           tl.to("#routes-p1", { boxShadow: "0 0 50px rgba(63,216,168,0.35)", duration: 0.8, ease: "sine.inOut", yoyo: true, repeat: 3 }, P2 + 3.6);
-          tl.to("#routes-in", { opacity: 0, duration: 0.4, ease: "power2.in" }, D - 0.4);
+          tl.to("#routes-in", { opacity: 0, duration: 0.4, ease: "power2.in" }, D - 0.8); // dip: fully out before the next scene starts
           window.__timelines["routes"] = tl;
         })();
       </script>

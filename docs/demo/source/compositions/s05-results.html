@@ -12,7 +12,7 @@
           background: var(--panel); padding: 44px 34px 36px; display: flex; flex-direction: column; overflow: hidden;
         }
         #results-root .card .bar { position: absolute; left: 0; top: 0; width: 100%; height: 6px; }
-        #results-root .card .layer { font-family: var(--mono); font-size: 20px; letter-spacing: 0.12em; text-transform: uppercase; }
+        #results-root .card .layer { font-family: var(--mono); font-size: 22px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
         #results-root .card .big {
           margin-top: 18px; font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 84px;
           font-weight: 700; letter-spacing: -0.05em; line-height: 1; white-space: nowrap;
@@ -30,27 +30,28 @@
         #results-root .mod .big, #results-root .mod .layer { color: var(--c-model); }
         #results-root .ev .bar, #results-root .ev .mini-fill { background: var(--c-eval); }
         #results-root .ev .big, #results-root .ev .layer { color: var(--c-eval); }
-        #results-root .footnote { position: absolute; left: 120px; top: 840px; font-family: var(--mono); font-size: 24px; color: var(--ink-mute); }
+        #results-root .footnote { position: absolute; left: 120px; top: 840px; font-size: 26px; font-weight: 500; color: var(--ink-soft); }
       </style>
       <div id="results-root" data-composition-id="results" data-width="1920" data-height="1080">
         <div class="scene" id="results-in">
           <div class="eyebrow" data-layout-allow-overlap id="results-eyebrow">08 · Results · test window Sep–Dec 2025</div>
           <div class="scene-title" data-layout-allow-overlap id="results-title">Margin earned on COD, and a forecast that holds in sale week.</div>
+          <div class="scene-sub" id="results-sub">Margin = profit after shipping, fees and losses, so higher is better. Forecast error: lower is better.</div>
           <div class="cards">
             <div class="card opt" id="results-c1"><div class="bar"></div><div class="layer">decision</div>
-              <div class="big" id="results-v1">+0</div><div class="lab">margin, COD margin rule</div>
+              <div class="big" id="results-v1">+0</div><div class="lab">extra margin from the COD rule</div>
               <div class="mini"><div class="mini-fill" id="results-m1"></div></div><div class="foot">risk score: −2,113</div></div>
             <div class="card opt" id="results-c2"><div class="bar"></div><div class="layer">decision</div>
               <div class="big" id="results-v2">0%</div><div class="lab">of the gain a perfect model gets</div>
-              <div class="mini"><div class="mini-fill" id="results-m2"></div></div><div class="foot">true p ceiling: +35,479</div></div>
+              <div class="mini"><div class="mini-fill" id="results-m2"></div></div><div class="foot">perfect model: +35,479</div></div>
             <div class="card mod" id="results-c3"><div class="bar"></div><div class="layer">forecast</div>
-              <div class="big" id="results-v3">22.5%</div><div class="lab">daily margin error, sale days</div>
-              <div class="mini"><div class="mini-fill" id="results-m3"></div></div><div class="foot">flat class rates: 22.5%</div></div>
+              <div class="big" id="results-v3">22.5%</div><div class="lab">forecast error per sale day</div>
+              <div class="mini"><div class="mini-fill" id="results-m3"></div></div><div class="foot">flat averages: 22.5%</div></div>
             <div class="card ev" id="results-c4"><div class="bar"></div><div class="layer">evaluation</div>
-              <div class="big" id="results-v4">+0</div><div class="lab">margin rule minus risk rule</div>
-              <div class="mini"><div class="mini-fill" id="results-m4"></div></div><div class="foot">95% CI 21,580 to 27,556</div></div>
+              <div class="big" id="results-v4">+0</div><div class="lab">better than ranking COD orders on risk</div>
+              <div class="mini"><div class="mini-fill" id="results-m4"></div></div><div class="foot">95% CI: 21,580–27,556</div></div>
           </div>
-          <div class="footnote" id="results-foot">73,024 test orders · 35,389 paid by COD · every policy scored on the generator's true probabilities</div>
+          <div class="footnote" id="results-foot">73,024 test orders, 35,389 paid by COD. Every rule is scored on the simulator's true odds. CI = 95% confidence range.</div>
         </div>
       </div>
       <script>
@@ -60,6 +61,7 @@
           tl.fromTo("#results-in", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 0);
           tl.fromTo("#results-eyebrow", { opacity: 0, x: -24 }, { opacity: 1, x: 0, duration: 0.5, ease: "power2.out" }, 0.1);
           tl.fromTo("#results-title", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.7, ease: "power3.out" }, 0.2);
+          tl.fromTo("#results-sub", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 0.5);
           const num = (v, d, sign) => (sign && v >= 0 ? "+" : "") + v.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
           const stats = [
             { v: "results-v1", m: "#results-m1", from: 0, to: 22258, d: 0, sign: true, suf: "", r0: 0, r: 22258 / 35479 },
@@ -76,7 +78,7 @@
             tl.fromTo(s.m, { scaleX: s.r0 }, { scaleX: s.r, duration: 1.6, ease: "power3.out" }, at + 0.3);
           });
           tl.fromTo("#results-foot", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 2.8);
-          tl.to("#results-in", { opacity: 0, duration: 0.4, ease: "power2.in" }, D - 0.4);
+          tl.to("#results-in", { opacity: 0, duration: 0.4, ease: "power2.in" }, D - 0.8); // dip: fully out before the next scene starts
           window.__timelines["results"] = tl;
         })();
       </script>

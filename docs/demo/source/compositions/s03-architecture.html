@@ -13,28 +13,29 @@
           position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: 14px 18px 0;
         }
         #arch-root .node .t { font-size: 26px; font-weight: 700; letter-spacing: -0.01em; color: var(--ink); white-space: nowrap; line-height: 1.15; }
-        #arch-root .node .s { font-family: var(--mono); font-size: 20px; color: var(--ink-soft); white-space: nowrap; line-height: 1.2; }
+        #arch-root .node .s { font-size: 22px; font-weight: 500; color: var(--ink-soft); white-space: nowrap; line-height: 1.2; }
         #arch-root .node .f {
-          position: absolute; right: 12px; top: -15px; font-family: var(--mono); font-size: 20px; padding: 1px 9px;
+          position: absolute; right: 12px; top: -17px; font-family: var(--mono); font-size: 22px; padding: 0 9px;
           border-radius: 6px; background: var(--bg); border: 2px solid var(--line); white-space: nowrap; line-height: 1.3;
         }
         #arch-root .node.ghost .t { color: var(--ink-soft); }
         #arch-root .node.cyl .body { padding-top: 26px; }
         #arch-root .node.diamond .body { align-items: center; padding: 0; }
         #arch-root .node.diamond .t { font-family: var(--mono); font-size: 26px; }
+        #arch-root .node.diamond .s { font-family: var(--mono); font-weight: 700; }
         #arch-root .node.diamond .s { color: var(--c-opt); }
         #arch-root .node.lane .body { padding: 14px 26px 0; }
         #arch-root .hdr {
-          position: absolute; top: 240px; font-family: var(--mono); font-size: 20px; font-weight: 700; letter-spacing: 0.14em;
+          position: absolute; top: 236px; font-family: var(--mono); font-size: 22px; font-weight: 700; letter-spacing: 0.1em;
           white-space: nowrap;
         }
         #arch-root .wl {
-          position: absolute; font-family: var(--mono); font-size: 20px; line-height: 24px; height: 24px; white-space: nowrap;
+          position: absolute; font-family: var(--mono); font-size: 22px; line-height: 26px; height: 26px; white-space: nowrap;
           padding: 0 6px; border-radius: 5px; background: rgba(10, 17, 25, 0.92);
         }
         #arch-root .legend {
-          position: absolute; left: 120px; top: 918px; width: 1680px; display: flex; gap: 30px; align-items: center;
-          font-family: var(--mono); font-size: 20px; color: var(--ink-soft); white-space: nowrap;
+          position: absolute; left: 120px; top: 918px; width: 1680px; display: flex; gap: 24px; align-items: center;
+          font-family: var(--mono); font-size: 22px; color: var(--ink-soft); white-space: nowrap;
         }
         #arch-root .legend span { display: flex; align-items: center; gap: 10px; }
         #arch-root .legend svg { display: block; }
@@ -51,12 +52,13 @@
         <div class="scene" id="arch-in">
           <div class="eyebrow" data-layout-allow-overlap id="arch-eyebrow">05 · Architecture</div>
           <div class="scene-title" data-layout-allow-overlap id="arch-title">Probabilities in, money out: one decision per cash order.</div>
+          <div class="scene-sub" id="arch-sub">Each box is a file in the repo. Data flows left to right and ends in one yes/no per cash-on-delivery order.</div>
           <div class="diagram" id="arch-diagram">
             <svg class="wires" viewBox="0 0 1920 1080" id="arch-svg"></svg>
             <div id="arch-nodes"></div>
             <div id="arch-labels"></div>
             <div class="legend" id="arch-legend"></div>
-            <div class="crit" id="arch-crit" data-layout-allow-overlap><b>CRITICAL PATH</b>order rows → features → LightGBM → isotonic → E[margin] → gain &gt; 0 ? → checkout</div>
+            <div class="crit" id="arch-crit" data-layout-allow-overlap><b>CRITICAL PATH</b>order rows → features → LightGBM → calibrate → expected margin → gain &gt; 0 ? → checkout</div>
           </div>
         </div>
       </div>
@@ -66,7 +68,7 @@
           const tl = gsap.timeline({ paused: true });
           const D = 14.0;
           const NS = "http://www.w3.org/2000/svg";
-          const COL = { data: "#7fa8ff", model: "#b9a2ff", opt: "#3fd8a8", eval: "#f2c46d", risk: "#ff8a73", mute: "#8494a6" };
+          const COL = { data: "#7fa8ff", model: "#b9a2ff", opt: "#3fd8a8", eval: "#f2c46d", risk: "#ff8a73", mute: "#9fb0c2" };
           const FILL = { data: "#0f1a2b", model: "#16142b", opt: "#0d2422", eval: "#211d12", risk: "#24161a", mute: "#0f1a26" };
 
           // ---------------- layout grid (px) ----------------
@@ -80,21 +82,21 @@
           const N = [
             { id: "cfg-split", col: 0, ...box(0, "U"), kind: "doc", L: "data", tag: "config.py", t: "Time split", s: ["4 date windows"] },
             { id: "orders", col: 0, ...box(0, "M"), kind: "cyl", L: "data", tag: "generate.py", t: "Order history", s: ["341,880 orders", "2024–2025"] },
-            { id: "truth", col: 0, ...box(0, "L"), kind: "cyl", L: "eval", dashed: true, tag: "data/truth", t: "True p", s: ["scoring only"] },
+            { id: "truth", col: 0, ...box(0, "L"), kind: "cyl", L: "eval", dashed: true, tag: "data/truth", t: "True odds", s: ["scoring only"] },
             { id: "feat", col: 1, ...box(1, "M"), kind: "box", L: "data", tag: "features.py", t: "Features", s: ["23 columns", "history ≥14 d old"] },
-            { id: "cf", col: 1, ...box(1, "L"), kind: "box", L: "data", tag: "features.py", t: "with_payment", s: ["COD → card"] },
-            { id: "gbm", col: 2, ...box(2, "M"), kind: "box", L: "model", hero: true, tag: "models.py", t: "LightGBM", s: ["5-outcome softmax", "186 rounds × 5 trees"] },
-            { id: "base", col: 2, ...box(2, "L"), kind: "ghost", L: "model", tag: "models.py", t: "Baselines", s: ["priors · logistic", "class-weighted ✗"] },
+            { id: "cf", col: 1, ...box(1, "L"), kind: "box", L: "data", tag: "features.py", t: "Card version", s: ["same order, as card"] },
+            { id: "gbm", col: 2, ...box(2, "M"), kind: "box", L: "model", hero: true, tag: "models.py", t: "LightGBM", s: ["5 outcomes at once", "186 boosting rounds"] },
+            { id: "base", col: 2, ...box(2, "L"), kind: "ghost", L: "model", tag: "models.py", t: "Baselines", s: ["averages · logistic", "class-weighted ✗"] },
             { id: "platt", col: 3, ...box(3, "U"), kind: "ghost", L: "model", tag: "calibration.py", t: "Platt", s: ["compared"] },
-            { id: "iso", col: 3, ...box(3, "M"), kind: "box", L: "model", tag: "calibration.py", t: "Isotonic", s: ["1-vs-rest", "fit May–Aug 25"] },
+            { id: "iso", col: 3, ...box(3, "M"), kind: "box", L: "model", tag: "calibration.py", t: "Calibrate", s: ["isotonic", "fit May–Aug 25"] },
             { id: "conv", col: 3, ...box(3, "L"), kind: "person", L: "risk", tag: "human input", t: "Card switch", s: ["40% / 60%", "assumed input"] },
             { id: "cfg-econ", col: 4, ...box(4, "U"), kind: "doc", L: "opt", tag: "config.py", t: "Margin table", s: ["fees · shipping"] },
-            { id: "econ", col: 4, ...box(4, "M"), kind: "box", L: "opt", tag: "economics.py", t: "E[margin]", s: ["Σ p × margin", "as COD and card"] },
+            { id: "econ", col: 4, ...box(4, "M"), kind: "box", L: "opt", tag: "economics.py", t: "Margin", s: ["odds × money", "as COD, as card"] },
             { id: "dec", col: 4, ...box(4, "L"), kind: "diamond", L: "opt", tag: null, t: "gain > 0 ?", s: ["policy.py"] },
-            { id: "runtime", col: 5, ...box(5, "U"), kind: "ghost", L: "mute", tag: "runtime", t: "72.8 s", s: ["pipeline run", "offline batch"] },
+            { id: "runtime", col: 5, ...box(5, "U"), kind: "ghost", L: "mute", tag: "runtime", t: "72.8 s", s: ["full run", "offline batch"] },
             { id: "fin", col: 5, ...box(5, "M"), kind: "box", L: "opt", tag: "consumer", t: "Finance", s: ["margin / day"] },
             { id: "chk", col: 5, ...box(5, "L"), kind: "box", L: "opt", tag: "consumer", t: "Checkout", s: ["COD on / off"] },
-            { id: "eval", col: 6, x: 400, y: R.B[0], w: 1170, h: R.B[1], kind: "lane", L: "eval", tag: "pipeline.py · evaluation", t: "Evaluation · test window Sep–Dec 2025 · 73,024 orders", s: ["log-loss · classwise ECE · daily margin error · COD policy on true p · bootstrap 95% CI"] },
+            { id: "eval", col: 6, x: 400, y: R.B[0], w: 1170, h: R.B[1], kind: "lane", L: "eval", tag: "pipeline.py · evaluation", t: "Evaluation · test window Sep–Dec 2025 · 73,024 orders", s: ["how well the odds fit · daily margin error · COD rules scored on the true odds · 95% CI"] },
             { id: "out", col: 7, ...box(5, "B"), kind: "cyl", L: "eval", tag: "pipeline.py", t: "outputs/", s: ["report.md"] },
           ];
 
@@ -139,20 +141,20 @@
           // ---------------- wires: orthogonal point lists, labelled with what flows ----------------
           // style: solid = batch data flow · dot = counterfactual second pass · dash = scoring only (truth never decides)
           const W = [
-            { id: "split", pts: [[340, 335], [835, 335], [835, 430]], c: "data", step: 0, lab: ["train · stop · calib · test", 515, 309] },
+            { id: "split", pts: [[340, 335], [835, 335], [835, 430]], c: "data", step: 0, lab: ["train · tune · calibrate · test", 600, 307] },
             { id: "rows", pts: [[340, 495], [400, 495]], c: "data", step: 0, crit: true, lab: ["order rows", 370, 395] },
-            { id: "x", pts: [[630, 495], [690, 495]], c: "data", step: 1, crit: true, lab: ["X · 23 cols", 660, 395] },
-            { id: "cf-in", pts: [[515, 560], [515, 606]], c: "data", step: 1, style: "dot", lab: ["COD rows", 590, 573] },
-            { id: "cf-out", pts: [[630, 661], [660, 661], [660, 525], [690, 525]], c: "data", step: 2, style: "dot", lab: ["payment = card", 752, 573] },
-            { id: "raw", pts: [[980, 495], [1040, 495]], c: "model", step: 3, crit: true, lab: ["raw p · n×5", 1010, 395] },
-            { id: "p", pts: [[1270, 495], [1330, 495]], c: "model", step: 4, crit: true, lab: ["p · sums to 1", 1300, 573] },
+            { id: "x", pts: [[630, 495], [690, 495]], c: "data", step: 1, crit: true, lab: ["inputs", 660, 395] },
+            { id: "cf-in", pts: [[515, 560], [515, 606]], c: "data", step: 1, style: "dot", lab: ["COD rows", 590, 562] },
+            { id: "cf-out", pts: [[630, 661], [660, 661], [660, 525], [690, 525]], c: "data", step: 2, style: "dot", lab: ["payment = card", 760, 562] },
+            { id: "raw", pts: [[980, 495], [1040, 495]], c: "model", step: 3, crit: true, lab: ["5 odds", 1010, 395] },
+            { id: "p", pts: [[1270, 495], [1330, 495]], c: "model", step: 4, crit: true, lab: ["odds", 1300, 573] },
             { id: "mt", pts: [[1450, 380], [1450, 430]], c: "opt", step: 4, lab: ["margin per outcome", 1334, 395] },
-            { id: "em", pts: [[1450, 560], [1450, 606]], c: "opt", step: 5, crit: true, lab: ["E[cod] · E[card]", 1556, 573] },
-            { id: "conv", pts: [[1270, 661], [1330, 661]], c: "risk", step: 5, lab: ["conv", 1300, 628] },
+            { id: "em", pts: [[1450, 560], [1450, 606]], c: "opt", step: 5, crit: true, lab: ["COD vs card", 1540, 573] },
+            { id: "conv", pts: [[1270, 661], [1330, 661]], c: "risk", step: 5, lab: ["rate", 1300, 626] },
             { id: "day", pts: [[1570, 495], [1630, 495]], c: "opt", step: 5, lab: ["margin / day", 1600, 395] },
             { id: "yes", pts: [[1570, 661], [1630, 661]], c: "opt", step: 6, crit: true, lab: ["yes: hide COD", 1600, 730] },
             { id: "tap", pts: [[1450, 716], [1450, 776]], c: "eval", step: 6, style: "dash", lab: null },
-            { id: "truth", pts: [[230, 716], [230, 826], [400, 826]], c: "eval", step: 6, style: "dash", lab: ["true p only", 318, 792] },
+            { id: "truth", pts: [[230, 716], [230, 826], [400, 826]], c: "eval", step: 6, style: "dash", lab: ["true odds", 318, 792] },
             { id: "res", pts: [[1570, 826], [1630, 826]], c: "eval", step: 7, lab: null },
           ];
           const svg = document.getElementById("arch-svg");
@@ -178,13 +180,13 @@
             const ang = (Math.atan2(q[1] - p[1], q[0] - p[0]) * 180) / Math.PI;
             w.head = mk("path", { d: "M0 0 L-13 -7 L-13 7 Z", fill: COL[w.c], transform: "translate(" + q[0] + " " + q[1] + ") rotate(" + ang + ")", opacity: 0 });
             if (w.lab) {
-              // centre the label on its anchor x (JetBrains Mono 20px = 12 px per char, plus 12 px padding)
-              const left = w.lab[1] - (w.lab[0].length * 12 + 12) / 2;
+              // centre the label on its anchor x (JetBrains Mono 22px = 13.2 px per char, plus 12 px padding)
+              const left = w.lab[1] - (w.lab[0].length * 13.2 + 12) / 2;
               labelsEl.insertAdjacentHTML("beforeend", '<div class="wl" id="al-' + w.id + '" style="color:' + COL[w.c] + ";left:" + left + "px;top:" + w.lab[2] + 'px">' + w.lab[0] + "</div>");
             }
           });
           // fallback branch: no -> keep COD (the default)
-          labelsEl.insertAdjacentHTML("beforeend", '<div class="wl" id="al-no" style="color:#b2bfcc;left:1150px;top:730px">no: keep COD (default)</div>');
+          labelsEl.insertAdjacentHTML("beforeend", '<div class="wl" id="al-no" style="color:#c8d3de;left:1130px;top:730px">no: keep COD (default)</div>');
 
           // legend: shapes and line styles
           const LG = [
@@ -192,9 +194,9 @@
             ['<svg width="24" height="24"><path d="M1 1 H16 L23 8 V23 H1 Z" fill="none" stroke="#7fa8ff" stroke-width="2"/></svg>', "config"],
             ['<svg width="26" height="24"><path d="M13 1 L25 12 L13 23 L1 12 Z" fill="none" stroke="#3fd8a8" stroke-width="2"/></svg>', "decision"],
             ['<svg width="30" height="24"><rect x="1" y="3" width="28" height="18" rx="9" fill="none" stroke="#ff8a73" stroke-width="2" stroke-dasharray="5 4"/></svg>', "human input"],
-            ['<svg width="30" height="24"><rect x="1" y="3" width="28" height="18" rx="4" fill="none" stroke="#8494a6" stroke-width="2" stroke-dasharray="5 4"/></svg>', "compared, not shipped"],
-            ['<svg width="40" height="24"><path d="M1 12 H39" stroke="#b2bfcc" stroke-width="3"/></svg>', "batch flow"],
-            ['<svg width="40" height="24"><path d="M2 12 H39" stroke="#b2bfcc" stroke-width="4" stroke-dasharray="2 7" stroke-linecap="round"/></svg>', "2nd pass, as card"],
+            ['<svg width="30" height="24"><rect x="1" y="3" width="28" height="18" rx="4" fill="none" stroke="#9fb0c2" stroke-width="2" stroke-dasharray="5 4"/></svg>', "not shipped"],
+            ['<svg width="40" height="24"><path d="M1 12 H39" stroke="#c8d3de" stroke-width="3"/></svg>', "data flow"],
+            ['<svg width="40" height="24"><path d="M2 12 H39" stroke="#c8d3de" stroke-width="4" stroke-dasharray="2 7" stroke-linecap="round"/></svg>', "as card"],
             ['<svg width="40" height="24"><path d="M1 12 H39" stroke="#f2c46d" stroke-width="3" stroke-dasharray="8 6"/></svg>', "scoring only"],
           ];
           document.getElementById("arch-legend").innerHTML = LG.map(([i, t]) => "<span>" + i + t + "</span>").join("");
@@ -203,6 +205,7 @@
           tl.fromTo("#arch-in", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 0);
           tl.fromTo("#arch-eyebrow", { opacity: 0, x: -24 }, { opacity: 1, x: 0, duration: 0.5, ease: "power2.out" }, 0.1);
           tl.fromTo("#arch-title", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.7, ease: "power3.out" }, 0.2);
+          tl.fromTo("#arch-sub", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 0.5);
           const COLT = [0.7, 1.5, 2.3, 3.1, 3.9, 4.7, 5.3, 5.7]; // column / lane reveal times
           HDR.forEach(([, c]) => tl.fromTo("#ah-" + c, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" }, COLT[c]));
           const rowOf = (n) => (n.y === R.U[0] ? 0 : n.y === R.M[0] ? 1 : 2);
@@ -251,20 +254,20 @@
           // ---------------- phase 3: the critical path ----------------
           const H = 11.3;
           const critNodes = ["orders", "feat", "gbm", "iso", "econ", "dec", "chk"];
-          N.filter((n) => !critNodes.includes(n.id)).forEach((n) => tl.to("#an-" + n.id, { opacity: 0.3, duration: 0.5, ease: "power2.inOut" }, H));
+          N.filter((n) => !critNodes.includes(n.id)).forEach((n) => tl.to("#an-" + n.id, { opacity: 0.75, duration: 0.5, ease: "power2.inOut" }, H)); // stays >= 4.5:1
           W.filter((w) => !w.crit).forEach((w) => {
             tl.to(w.el, { attr: { opacity: 0.2 }, duration: 0.5 }, H);
             tl.to(w.head, { attr: { opacity: 0.2 }, duration: 0.5 }, H);
-            if (w.lab) tl.to("#al-" + w.id, { opacity: 0.3, duration: 0.5 }, H);
+            if (w.lab) tl.to("#al-" + w.id, { opacity: 0.75, duration: 0.5 }, H);
           });
-          tl.to(["#al-no", ...HDR.map(([, c]) => "#ah-" + c)], { opacity: 0.4, duration: 0.5 }, H);
+          tl.to(["#al-no", ...HDR.map(([, c]) => "#ah-" + c)], { opacity: 0.75, duration: 0.5 }, H);
           W.filter((w) => w.crit).forEach((w) => {
             tl.to(w.el, { attr: { "stroke-width": 6, opacity: 1 }, duration: 0.5 }, H);
             tl.fromTo(w.glow, { attr: { opacity: 0 } }, { attr: { opacity: 0.22 }, duration: 0.5 }, H);
           });
           tl.to("#arch-legend", { opacity: 0, duration: 0.3 }, H);
           tl.fromTo("#arch-crit", { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.5, ease: "power3.out" }, H + 0.2);
-          tl.to("#arch-in", { opacity: 0, duration: 0.4, ease: "power2.in" }, D - 0.4);
+          tl.to("#arch-in", { opacity: 0, duration: 0.4, ease: "power2.in" }, D - 0.8); // dip: fully out before the next scene starts
           window.__timelines["arch"] = tl;
         })();
       </script>

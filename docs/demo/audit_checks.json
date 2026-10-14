@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-14 14:43",
+ "generated": "2026-10-14 19:03",
  "commit": "e78d53a391889af780be9f07f440398e04edc426",
  "checks": [
   {
@@ -140,7 +140,7 @@
   },
   {
    "id": "F-18",
-   "shown": "186 rounds",
+   "shown": "186 boosting rounds",
    "type": "direct",
    "computed": "186",
    "expect": "186",
@@ -148,8 +148,8 @@
   },
   {
    "id": "F-19",
-   "shown": "\u00d7 5 trees / 5-outcome softmax",
-   "type": "derived",
+   "shown": "5 outcomes at once",
+   "type": "direct",
    "computed": "true",
    "expect": "true",
    "status": "pass"
@@ -188,7 +188,7 @@
   },
   {
    "id": "F-24",
-   "shown": "log-loss \u00b7 classwise ECE \u00b7 daily margin error \u00b7 COD policy on true p \u00b7 bootstrap 95% CI",
+   "shown": "how well the odds fit \u00b7 daily margin error \u00b7 COD rules scored on the true odds \u00b7 95% CI",
    "type": "direct",
    "computed": "true",
    "expect": "true",
@@ -196,7 +196,7 @@
   },
   {
    "id": "F-25",
-   "shown": "4 date windows \u00b7 train \u00b7 stop \u00b7 calib \u00b7 test",
+   "shown": "4 date windows \u00b7 train \u00b7 tune \u00b7 calibrate \u00b7 test",
    "type": "direct",
    "computed": "true",
    "expect": "true",
@@ -204,11 +204,11 @@
   },
   {
    "id": "F-26",
-   "shown": "expected vs realized daily margin (image)",
+   "shown": "SVG line chart",
    "type": "direct",
-   "status": "manual",
-   "computed": "-",
-   "reason": "Image of the repo's own figure, colour-inverted to dark; legend redrawn because the original legend was painted over."
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
   },
   {
    "id": "F-27",
@@ -244,11 +244,11 @@
   },
   {
    "id": "F-31",
-   "shown": "margin gained against orders lost (image)",
+   "shown": "SVG line chart, y clipped to -60k..+40k",
    "type": "direct",
-   "status": "manual",
-   "computed": "-",
-   "reason": "Image of the repo's own figure, colour-inverted to dark, then zoomed 1.7x towards the top band; legend redrawn on the right."
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
   },
   {
    "id": "F-32",
@@ -268,7 +268,7 @@
   },
   {
    "id": "F-34",
-   "shown": "15.5% of COD hidden",
+   "shown": "hidden on 15.5% of COD orders",
    "type": "direct",
    "computed": "15.5%",
    "expect": "15.5%",
@@ -356,7 +356,7 @@
   },
   {
    "id": "F-45",
-   "shown": "true p ceiling: +35,479",
+   "shown": "perfect model: +35,479",
    "type": "direct",
    "computed": "+35,479",
    "expect": "+35,479",
@@ -372,80 +372,88 @@
   },
   {
    "id": "F-47",
-   "shown": "95% CI 21,580 to 27,556",
+   "shown": "95% CI: 21,580\u201327,556",
    "type": "direct",
-   "computed": "21,580 to 27,556",
-   "expect": "21,580 to 27,556",
+   "computed": "21,580\u201327,556",
+   "expect": "21,580\u201327,556",
    "status": "pass"
   },
   {
    "id": "F-48",
-   "shown": "0.7442",
+   "shown": "16.47\u00d7",
    "type": "direct",
-   "computed": "0.7442",
-   "expect": "0.7442",
+   "computed": "16.47\u00d7",
+   "expect": "16.47\u00d7",
    "status": "pass"
   },
   {
    "id": "F-49",
-   "shown": "0.6475",
+   "shown": "3.80\u00d7",
    "type": "direct",
-   "computed": "0.6475",
-   "expect": "0.6475",
+   "computed": "3.80\u00d7",
+   "expect": "3.80\u00d7",
    "status": "pass"
   },
   {
    "id": "F-50",
-   "shown": "0.6469",
+   "shown": "2.49\u00d7",
    "type": "direct",
-   "computed": "0.6469",
-   "expect": "0.6469",
+   "computed": "2.49\u00d7",
+   "expect": "2.49\u00d7",
    "status": "pass"
   },
   {
    "id": "F-51",
-   "shown": "0.6478",
+   "shown": "1.12\u00d7",
    "type": "direct",
-   "computed": "0.6478",
-   "expect": "0.6478",
+   "computed": "1.12\u00d7",
+   "expect": "1.12\u00d7",
    "status": "pass"
   },
   {
    "id": "F-52",
-   "shown": "0.6181",
+   "shown": "1.02\u00d7",
    "type": "direct",
-   "computed": "0.6181",
-   "expect": "0.6181",
+   "computed": "1.02\u00d7",
+   "expect": "1.02\u00d7",
    "status": "pass"
   },
   {
    "id": "F-53",
-   "shown": "macro-F1 0.290 / 0.294",
+   "shown": "0.98\u00d7",
    "type": "direct",
-   "computed": "0.290 / 0.294",
-   "expect": "0.290 / 0.294",
+   "computed": "0.98\u00d7",
+   "expect": "0.98\u00d7",
    "status": "pass"
   },
   {
    "id": "F-54",
-   "shown": "ECE 0.0027 \u2192 0.0035",
+   "shown": "64% of cash orders",
    "type": "direct",
-   "computed": "0.0027 -> 0.0035",
-   "expect": "0.0027 -> 0.0035",
+   "computed": "64%",
+   "expect": "64%",
    "status": "pass"
   },
   {
    "id": "F-55",
-   "shown": "ECE 0.206 \u2192 0.009",
+   "shown": "\u2212168,782",
    "type": "direct",
-   "computed": "0.206 -> 0.009",
-   "expect": "0.206 -> 0.009",
+   "computed": "-168,782",
+   "expect": "-168,782",
    "status": "pass"
   },
   {
    "id": "F-56",
-   "shown": "bars 6 / 767 / 772 / 764 / 1000 px",
+   "shown": "bars 260 / 60 / 39 px (lesson) and 18 / 16 / 15 px (fix)",
    "type": "derived",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-61",
+   "shown": "Ship the plain model, calibrated \u00b7 PICKED \u00b7 the weighted one is only a comparison",
+   "type": "direct",
    "computed": "true",
    "expect": "true",
    "status": "pass"

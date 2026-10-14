@@ -2,9 +2,9 @@
 
 **Repository:** https://github.com/kavya2693/order-outcome-margin  
 **Numbers taken from commit:** `e78d53a` (outputs last changed in `e78d53a (2026-10-13 22:05:19 +0400)`)  
-**Video:** `docs/demo/demo.mp4` (85.6 s, 1920x1080, 30 fps, silent)  
-**Generated:** 2026-10-14 14:43  
-**Automated checks:** 57 pass · 0 fail · 3 manual (of 60 figures)
+**Video:** `docs/demo/demo.mp4` (88.4 s, 1920x1080, 30 fps, silent)  
+**Generated:** 2026-10-14 19:03  
+**Automated checks:** 60 pass · 0 fail · 1 manual (of 61 figures)
 
 ## How to use this report
 
@@ -16,7 +16,9 @@ Types: **direct** = read straight from a repo output; **derived** = computed fro
 
 ```bash
 make run                                   # data/, outputs/*.csv, results.json, report.md, *.png (about 2 min)
-python3 docs/demo/source/tools/darkmap.py outputs docs/demo/source/assets
+python3 docs/demo/source/tools/export_run.py outputs docs/demo/source/assets/run.json
+python3 docs/demo/source/tools/inject_block.py docs/demo/source/assets/run.json docs/demo/source/compositions/s04-routes.html --block RUN --keys daily,frontier,points
+python3 docs/demo/source/tools/make_end_plot.py outputs docs/demo/source/assets/end-frontier.png
 PYTHONPATH=src .venv/bin/python docs/demo/source/tools/export_cod_sheet.py docs/demo/source/assets/cod_sheet.json
 python3 docs/demo/source/tools/inject_sheet.py docs/demo/source/assets/cod_sheet.json docs/demo/source/compositions/value.html --rows 315400,316055,316096,316229,315744,316309 --animate 315400,316096,316229,315744
 cd docs/demo/source && npx --yes hyperframes@0.8.156 check && npx --yes hyperframes@0.8.156 render -f 30 -q looks -o renders/order-outcome-margin-master.mp4 && cd -
@@ -40,29 +42,29 @@ python3 docs/demo/source/tools/build_audit_report.py docs/demo/source/audit/fact
 | F-10 | scored as cash and as card | 03 | `src/order_margin/pipeline.py:193-201` | with_payment(Xt_cod, 'card') | - | direct | ✓ verified |
 | F-11 | daily margin / cash rules / beats risk rule | 03 | `outputs/daily_margin.csv, outputs/results.json` | 122 daily rows; margin_minus_risk_rule > 0 | - | derived | ✓ verified |
 | F-12 | CALIBRATE · make the odds honest | 03 | `src/order_margin/calibration.py:26-39` | IsotonicCalibrator | - | direct | ✓ verified |
-| F-13 | +22,258 | 04, 06, 08 | `outputs/policy.csv` | policy='margin rule, gbm + isotonic', margin_change | - | direct | ✓ verified |
+| F-13 | +22,258 | 04, 06, 08, 09 | `outputs/policy.csv` | policy='margin rule, gbm + isotonic', margin_change | - | direct | ✓ verified |
 | F-14 | −2,113 | 04, 06, 08 | `outputs/policy.csv` | policy='risk score, same block rate as margin rule on calib (14.6%)', margin_change | - | direct | ✓ verified |
 | F-15 | config.py, generate.py, features.py, models.py, calibration.py, economics.py, policy.py, pipeline.py, data/truth | 05 | `src/order_margin/` | classes and functions | - | direct | ✓ verified |
 | F-16 | 23 columns | 05 | `src/order_margin/features.py:21-45` | NUMERIC (20) + CATEGORICAL (3) | 20 + 3 = 23 | direct | ✓ verified |
 | F-17 | history ≥14 d old | 05 | `src/order_margin/features.py:15` | RESOLVE_DAYS = 14 | - | direct | ✓ verified |
-| F-18 | 186 rounds | 05 | `outputs/results.json` | gbm_rounds | - | direct | ✓ verified |
-| F-19 | × 5 trees / 5-outcome softmax | 05 | `src/order_margin/models.py:74-75` | objective multiclass, num_class = N_CLASSES = 5 | 186 rounds x 5 = 930 trees | derived | ✓ verified |
+| F-18 | 186 boosting rounds | 05 | `outputs/results.json` | gbm_rounds | - | direct | ✓ verified |
+| F-19 | 5 outcomes at once | 05 | `src/order_margin/models.py:74-75` | objective multiclass, num_class = N_CLASSES = 5 | - | direct | ✓ verified |
 | F-20 | fit May–Aug 25 | 05 | `src/order_margin/config.py:68-69` | EARLY_STOP_END 2025-04-30, CALIB_END 2025-08-31 | - | direct | ✓ verified |
 | F-21 | 40% / 60% · assumed input | 05 | `src/order_margin/config.py:75` | COD_TO_CARD_CONVERSION | - | direct | ✓ verified |
 | F-22 | 72.8 s | 05 | `outputs/results.json` | runtime_seconds | - | direct | ✓ verified |
 | F-23 | 73,024 orders | 05, 08, 09 | `outputs/results.json` | orders_test | - | direct | ✓ verified |
-| F-24 | log-loss · classwise ECE · daily margin error · COD policy on true p · bootstrap 95% CI | 05 | `src/order_margin/pipeline.py:139-160, 274-275; calibration.py:64-83` | - | - | direct | ✓ verified |
-| F-25 | 4 date windows · train · stop · calib · test | 05 | `src/order_margin/pipeline.py:64-71` | split_masks keys | - | direct | ✓ verified |
-| F-26 | expected vs realized daily margin (image) | 06 | `outputs/daily_margin.png via tools/darkmap.py` | - | - | direct | manual: Image of the repo's own figure, colour-inverted to dark; legend redrawn because the original legend was painted over. |
+| F-24 | how well the odds fit · daily margin error · COD rules scored on the true odds · 95% CI | 05 | `src/order_margin/pipeline.py:139-160, 274-275; calibration.py:64-83` | - | - | direct | ✓ verified |
+| F-25 | 4 date windows · train · tune · calibrate · test | 05 | `src/order_margin/pipeline.py:64-71` | split_masks keys | - | direct | ✓ verified |
+| F-26 | SVG line chart | 06 | `outputs/daily_margin.csv via tools/export_run.py -> assets/run.json -> RUN block in s04-routes.html` | realized, class priors, gbm + isotonic, gbm class-weighted, raw, peak | values rounded to whole units; drawn, not retyped | direct | ✓ verified |
 | F-27 | 122 test days | 06 | `outputs/results.json` | test_days | - | direct | ✓ verified |
 | F-28 | 22.5% | 06, 08 | `outputs/metrics.csv` | model='class priors', daily_mape_peak (0.2254) | x 100 | direct | ✓ verified |
 | F-29 | 4.3% | 06, 08 | `outputs/metrics.csv` | model='gbm + isotonic', daily_mape_peak (0.0431) | x 100 | direct | ✓ verified |
 | F-30 | Class weighting forecasts a loss every day. | 06 | `outputs/daily_margin.csv` | column 'gbm class-weighted, raw' max = -10,259 | max < 0 | direct | ✓ verified |
-| F-31 | margin gained against orders lost (image) | 06 | `outputs/policy_frontier.png via tools/darkmap.py` | - | - | direct | manual: Image of the repo's own figure, colour-inverted to dark, then zoomed 1.7x towards the top band; legend redrawn on the right. |
+| F-31 | SVG line chart, y clipped to -60k..+40k | 06 | `outputs/policy_frontier.csv, outputs/policy.csv via tools/export_run.py` | orders_lost, margin_change per ranking; policy rows | same symlog x-axis as plots.py (linear below 100) | direct | ✓ verified |
 | F-32 | −509,868 | 06 | `outputs/policy.csv` | policy='block every COD order', margin_change | - | direct | ✓ verified |
 | F-33 | 14,469 orders lost | 06 | `outputs/policy.csv` | orders_lost = 14,468.6 | rounded | direct | ✓ verified |
-| F-34 | 15.5% of COD hidden | 06 | `outputs/policy.csv` | policy='margin rule, gbm + isotonic', blocked_share_of_cod (0.1554) | x 100 | direct | ✓ verified |
-| F-35 | 35,389 COD orders | 06, 08 | `outputs/results.json` | cod_orders_test | - | direct | ✓ verified |
+| F-34 | hidden on 15.5% of COD orders | 06 | `outputs/policy.csv` | policy='margin rule, gbm + isotonic', blocked_share_of_cod (0.1554) | x 100 | direct | ✓ verified |
+| F-35 | 35,389 COD orders | 06, 08, 09 | `outputs/results.json` | cod_orders_test | - | direct | ✓ verified |
 | F-36 | Risk score · same block rate | 06 | `src/order_margin/pipeline.py:206-218` | threshold_for_share(risk_score(pc_c), share) | - | direct | ✓ verified |
 | F-37 | SALE WEEK · 2025-11-24 | 07 | `demo assets/cod_sheet.json; src/order_margin/generate.py:30` | day, is_peak | - | direct | ✓ verified |
 | F-38 | 609 COD orders (6 rows + 603 more) | 07 | `demo assets/cod_sheet.json; data/orders.csv.gz` | cod_orders; COD orders placed on 2025-11-24 | - | direct | ✓ verified |
@@ -72,24 +74,25 @@ python3 docs/demo/source/tools/build_audit_report.py docs/demo/source/audit/fact
 | F-42 | (consistency check, not on screen) | 07 | `demo assets/cod_sheet.json; outputs/policy.csv` | test_window_blocked vs policy 'margin rule, gbm + isotonic' cod_orders_blocked | 5,498 = 5,498; 186 rounds = 186 | derived | ✓ verified |
 | F-43 | + 603 more COD orders | 07 | `F-38` | 609 - 6 rows | 609 - 6 = 603 | derived | ✓ verified |
 | F-44 | 63% | 08 | `outputs/policy.csv` | margin rule 22,258 / true-probability ceiling 35,479 | 22,258 / 35,479 = 62.7% | derived | ✓ verified |
-| F-45 | true p ceiling: +35,479 | 08 | `outputs/policy.csv` | policy='margin rule, true probabilities (ceiling)', margin_change | - | direct | ✓ verified |
+| F-45 | perfect model: +35,479 | 08 | `outputs/policy.csv` | policy='margin rule, true probabilities (ceiling)', margin_change | - | direct | ✓ verified |
 | F-46 | +24,371 | 08 | `outputs/results.json` | margin_minus_risk_rule | - | direct | ✓ verified |
-| F-47 | 95% CI 21,580 to 27,556 | 08 | `outputs/results.json` | margin_minus_risk_rule_ci95 | - | direct | ✓ verified |
-| F-48 | 0.7442 | 09 | `outputs/metrics.csv` | model='class priors', log_loss | - | direct | ✓ verified |
-| F-49 | 0.6475 | 09 | `outputs/metrics.csv` | model='logistic, raw', log_loss | - | direct | ✓ verified |
-| F-50 | 0.6469 | 09 | `outputs/metrics.csv` | model='gbm, raw', log_loss | - | direct | ✓ verified |
-| F-51 | 0.6478 | 09 | `outputs/metrics.csv` | model='gbm + isotonic', log_loss | - | direct | ✓ verified |
-| F-52 | 0.6181 | 09 | `outputs/metrics.csv` | model='true probabilities (ceiling)', log_loss | - | direct | ✓ verified |
-| F-53 | macro-F1 0.290 / 0.294 | 09 | `outputs/metrics.csv` | macro_f1 | - | direct | ✓ verified |
-| F-54 | ECE 0.0027 → 0.0035 | 09 | `outputs/metrics.csv` | ece_mean | - | direct | ✓ verified |
-| F-55 | ECE 0.206 → 0.009 | 09 | `outputs/metrics.csv` | ece_mean (0.2063, 0.0093) | rounded to 3 decimals | direct | ✓ verified |
-| F-56 | bars 6 / 767 / 772 / 764 / 1000 px | 09 | `outputs/metrics.csv` | (0.7442 - log_loss) / (0.7442 - 0.6181) x 1000 | logistic 767, LightGBM 772, LightGBM + isotonic 764 | derived | ✓ verified |
+| F-47 | 95% CI: 21,580–27,556 | 08 | `outputs/results.json` | margin_minus_risk_rule_ci95 | - | direct | ✓ verified |
+| F-48 | 16.47× | 09 | `outputs/metrics.csv` | model='gbm class-weighted, raw', count_ratio_fraud | - | direct | ✓ verified |
+| F-49 | 3.80× | 09 | `outputs/metrics.csv` | model='gbm class-weighted, raw', count_ratio_failed | - | direct | ✓ verified |
+| F-50 | 2.49× | 09 | `outputs/metrics.csv` | model='gbm class-weighted, raw', count_ratio_returned | - | direct | ✓ verified |
+| F-51 | 1.12× | 09 | `outputs/metrics.csv` | model='gbm + isotonic', count_ratio_fraud | - | direct | ✓ verified |
+| F-52 | 1.02× | 09 | `outputs/metrics.csv` | model='gbm + isotonic', count_ratio_failed | - | direct | ✓ verified |
+| F-53 | 0.98× | 09 | `outputs/metrics.csv` | model='gbm + isotonic', count_ratio_returned | - | direct | ✓ verified |
+| F-54 | 64% of cash orders | 09 | `outputs/policy.csv` | policy='margin rule, class-weighted gbm', blocked_share_of_cod (0.6393) | x 100 | direct | ✓ verified |
+| F-55 | −168,782 | 09 | `outputs/policy.csv` | policy='margin rule, class-weighted gbm', margin_change | - | direct | ✓ verified |
+| F-56 | bars 260 / 60 / 39 px (lesson) and 18 / 16 / 15 px (fix) | 09 | `outputs/metrics.csv` | count_ratio_* / max x 260 | round(ratio / 16.4749 x 260) | derived | ✓ verified |
+| F-61 | Ship the plain model, calibrated · PICKED · the weighted one is only a comparison | 09 | `src/order_margin/models.py:71; pipeline.py:122, 180, 203, 229, 252; tests/test_pipeline.py:24` | - | - | direct | ✓ verified |
 | F-57 | MIT | 10 | `LICENSE line 1` | - | - | direct | ✓ verified |
 | F-58 | about 2 min | 10 | `README.md line 137` | 'about 2 minutes on a laptop' | - | direct | ✓ verified |
 | F-59 | LightGBM · scikit-learn · pandas · Python | 10 | `pyproject.toml dependencies` | lightgbm, scikit-learn, pandas | - | direct | ✓ verified |
 | F-60 | $ make run | 10 | `Makefile` | run target | - | direct | ✓ verified |
 
-## 2. Automated check run (2026-10-14 14:43)
+## 2. Automated check run (2026-10-14 19:03)
 
 | ID | Expected on slide | Recomputed from repo | Result |
 |---|---|---|---|
@@ -118,12 +121,12 @@ python3 docs/demo/source/tools/build_audit_report.py docs/demo/source/audit/fact
 | F-23 | 73,024 | 73,024 | ✓ pass |
 | F-24 | true | true | ✓ pass |
 | F-25 | true | true | ✓ pass |
-| F-26 | expected vs realized daily margin (image) | - | manual |
+| F-26 | true | true | ✓ pass |
 | F-27 | 122 | 122 | ✓ pass |
 | F-28 | 22.5% | 22.5% | ✓ pass |
 | F-29 | 4.3% | 4.3% | ✓ pass |
 | F-30 | true | true | ✓ pass |
-| F-31 | margin gained against orders lost (image) | - | manual |
+| F-31 | true | true | ✓ pass |
 | F-32 | -509,868 | -509,868 | ✓ pass |
 | F-33 | 14,469 | 14,469 | ✓ pass |
 | F-34 | 15.5% | 15.5% | ✓ pass |
@@ -139,16 +142,17 @@ python3 docs/demo/source/tools/build_audit_report.py docs/demo/source/audit/fact
 | F-44 | 63% | 63% | ✓ pass |
 | F-45 | +35,479 | +35,479 | ✓ pass |
 | F-46 | +24,371 | +24,371 | ✓ pass |
-| F-47 | 21,580 to 27,556 | 21,580 to 27,556 | ✓ pass |
-| F-48 | 0.7442 | 0.7442 | ✓ pass |
-| F-49 | 0.6475 | 0.6475 | ✓ pass |
-| F-50 | 0.6469 | 0.6469 | ✓ pass |
-| F-51 | 0.6478 | 0.6478 | ✓ pass |
-| F-52 | 0.6181 | 0.6181 | ✓ pass |
-| F-53 | 0.290 / 0.294 | 0.290 / 0.294 | ✓ pass |
-| F-54 | 0.0027 -> 0.0035 | 0.0027 -> 0.0035 | ✓ pass |
-| F-55 | 0.206 -> 0.009 | 0.206 -> 0.009 | ✓ pass |
+| F-47 | 21,580–27,556 | 21,580–27,556 | ✓ pass |
+| F-48 | 16.47× | 16.47× | ✓ pass |
+| F-49 | 3.80× | 3.80× | ✓ pass |
+| F-50 | 2.49× | 2.49× | ✓ pass |
+| F-51 | 1.12× | 1.12× | ✓ pass |
+| F-52 | 1.02× | 1.02× | ✓ pass |
+| F-53 | 0.98× | 0.98× | ✓ pass |
+| F-54 | 64% | 64% | ✓ pass |
+| F-55 | -168,782 | -168,782 | ✓ pass |
 | F-56 | true | true | ✓ pass |
+| F-61 | true | true | ✓ pass |
 | F-57 | true | true | ✓ pass |
 | F-58 | true | true | ✓ pass |
 | F-59 | true | true | ✓ pass |
@@ -159,16 +163,17 @@ python3 docs/demo/source/tools/build_audit_report.py docs/demo/source/audit/fact
 | ID | Assumption | Source | Used by | Sensitivity: if this changes |
 |---|---|---|---|---|
 | A-01 | All data is synthetic, produced by a seeded generator sized to the production problem (341,880 orders over 2024-2025, six zones, five categories, COD about 48%). The production data is proprietary. | `src/order_margin/config.py:78 (SEED = 20260913); src/order_margin/generate.py; README 'The data'` | all figures | figures all figures and slides 01, 02, 03, 04, 05, 06, 07, 08, 09, 10 change |
-| A-02 | Card conversion: 40% of blocked customers younger than 30 days and 60% of the rest switch to a card. It is an input, not measured; with decisions fixed, 20 points lower conversion breaks even (+944) and 30 points lower loses 9,714. | `src/order_margin/config.py:75-76 (COD_TO_CARD_CONVERSION, NEW_CUSTOMER_DAYS); outputs/conversion_sensitivity.csv; README 'Known limitations' (biggest gap)` | F-13, F-14, F-21, F-32, F-33, F-34, F-39, F-40, F-41, F-44, F-45, F-46, F-47 | figures F-13, F-14, F-21, F-32, F-33, F-34, F-39, F-40, F-41, F-44, F-45, F-46, F-47 and slides 04, 05, 06, 07, 08 change |
-| A-03 | Unit economics are one table per category (gross margin, resale loss, shipping legs, COD/card/wallet fees, a 45 chargeback fee). Real courier rates vary by weight and contract. | `src/order_margin/config.py:22-60 (Economics); src/order_margin/economics.py:36-71` | F-13, F-14, F-28, F-29, F-30, F-32, F-40, F-41, F-44, F-45, F-46, F-47 | figures F-13, F-14, F-28, F-29, F-30, F-32, F-40, F-41, F-44, F-45, F-46, F-47 and slides 04, 06, 07, 08 change |
-| A-04 | Time split: train 2024-01-01..2025-02-28, early stopping 2025-03..04, calibration 2025-05..08, test 2025-09-01..12-31 (73,024 orders, 122 days). | `src/order_margin/config.py:67-71; pipeline.py:64-71 (split_masks)` | F-20, F-23, F-25, F-27, F-28, F-29, F-35 | figures F-20, F-23, F-25, F-27, F-28, F-29, F-35 and slides 05, 06, 08, 09 change |
+| A-02 | Card conversion: 40% of blocked customers younger than 30 days and 60% of the rest switch to a card. It is an input, not measured; with decisions fixed, 20 points lower conversion breaks even (+944) and 30 points lower loses 9,714. | `src/order_margin/config.py:75-76 (COD_TO_CARD_CONVERSION, NEW_CUSTOMER_DAYS); outputs/conversion_sensitivity.csv; README 'Known limitations' (biggest gap)` | F-13, F-14, F-21, F-32, F-33, F-34, F-39, F-40, F-41, F-44, F-45, F-46, F-47, F-54, F-55 | figures F-13, F-14, F-21, F-32, F-33, F-34, F-39, F-40, F-41, F-44, F-45, F-46, F-47, F-54, F-55 and slides 04, 05, 06, 07, 08, 09 change |
+| A-03 | Unit economics are one table per category (gross margin, resale loss, shipping legs, COD/card/wallet fees, a 45 chargeback fee). Real courier rates vary by weight and contract. | `src/order_margin/config.py:22-60 (Economics); src/order_margin/economics.py:36-71` | F-13, F-14, F-28, F-29, F-30, F-32, F-40, F-41, F-44, F-45, F-46, F-47, F-55 | figures F-13, F-14, F-28, F-29, F-30, F-32, F-40, F-41, F-44, F-45, F-46, F-47, F-55 and slides 04, 06, 07, 08, 09 change |
+| A-04 | Time split: train 2024-01-01..2025-02-28, early stopping 2025-03..04, calibration 2025-05..08, test 2025-09-01..12-31 (73,024 orders, 122 days). | `src/order_margin/config.py:67-71; pipeline.py:64-71 (split_masks)` | F-20, F-23, F-25, F-27, F-28, F-29, F-35, F-48, F-49, F-50, F-51, F-52, F-53 | figures F-20, F-23, F-25, F-27, F-28, F-29, F-35, F-48, F-49, F-50, F-51, F-52, F-53 and slides 05, 06, 08, 09 change |
 | A-05 | Outcomes are known 14 days after the order; customer history features only use orders placed at least 14 days earlier, shrunk towards fixed long-run rates. | `src/order_margin/features.py:15-19 (RESOLVE_DAYS, PRIOR_STRENGTH, POPULATION_RATE)` | F-17 | figures F-17 and slides 05 change |
-| A-06 | COD policies are scored on the generator's true outcome probabilities under COD and under card (data/truth/order_truth.csv.gz), never on the model that made the decision. The card version of an order is the same order with the payment feature switched. | `src/order_margin/pipeline.py:186-201 (counterfactual), :236-245 (score_policy); features.py:with_payment; README 'How it works'` | F-13, F-14, F-32, F-40, F-44, F-45, F-46, F-47 | figures F-13, F-14, F-32, F-40, F-44, F-45, F-46, F-47 and slides 04, 06, 07, 08 change |
-| A-07 | LightGBM settings: multiclass, learning rate 0.03, 15 leaves, seed 7, early stopping with 100-round patience on the March-April 2025 window (stopped at 186 rounds); chosen from four settings, never on the test window. | `src/order_margin/models.py:71-108; README 'How it works'` | F-18, F-19, F-50, F-51 | figures F-18, F-19, F-50, F-51 and slides 05, 09 change |
+| A-06 | COD policies are scored on the generator's true outcome probabilities under COD and under card (data/truth/order_truth.csv.gz), never on the model that made the decision. The card version of an order is the same order with the payment feature switched. | `src/order_margin/pipeline.py:186-201 (counterfactual), :236-245 (score_policy); features.py:with_payment; README 'How it works'` | F-13, F-14, F-32, F-40, F-44, F-45, F-46, F-47, F-55 | figures F-13, F-14, F-32, F-40, F-44, F-45, F-46, F-47, F-55 and slides 04, 06, 07, 08, 09 change |
+| A-07 | LightGBM settings: multiclass, learning rate 0.03, 15 leaves, seed 7, early stopping with 100-round patience on the March-April 2025 window (stopped at 186 rounds); chosen from four settings, never on the test window. | `src/order_margin/models.py:71-108; README 'How it works'` | F-18, F-19, F-48, F-49, F-50, F-51, F-52, F-53 | figures F-18, F-19, F-48, F-49, F-50, F-51, F-52, F-53 and slides 05, 09 change |
 | A-08 | One seed and one test window. The bootstrap interval (1,000 order resamples) covers which orders arrived, not a different year or fraud pattern. | `src/order_margin/pipeline.py:268-275; README 'Known limitations'` | F-46, F-47 | figures F-46, F-47 and slides 08 change |
-| A-09 | 'Sale days' = days flagged is_peak: the November sale week (2025-11-21..29) plus 11.11. The dashed SALE WEEK box on slide 06 marks Nov 21-29 only. | `src/order_margin/generate.py:30-31 (SALE_WEEKS, SINGLES_DAY); pipeline.py:74-85 (_daily_errors)` | F-28, F-29, F-37 | figures F-28, F-29, F-37 and slides 06, 07, 08 change |
-| A-10 | Video rounding: margins to whole units with thousands separators, percentages to 1 decimal (63% and 48% to whole numbers), log-loss to 4 decimals, macro-F1 and ECE as in report.md; '~470 a day' and 'about 2 min' are rounded labels. | `this audit (display convention)` | F-05, F-07, F-09, F-22, F-28, F-29, F-34, F-44, F-55, F-58 | figures F-05, F-07, F-09, F-22, F-28, F-29, F-34, F-44, F-55, F-58 and slides 02, 05, 06, 08, 09, 10 change |
+| A-09 | 'Sale days' = days flagged is_peak: the November sale week (2025-11-21..29) plus 11.11. Slide 06 shades all ten of them (label 'SALE DAYS (shaded)'). | `src/order_margin/generate.py:30-31 (SALE_WEEKS, SINGLES_DAY); pipeline.py:74-85 (_daily_errors)` | F-28, F-29, F-37, F-26 | figures F-28, F-29, F-37, F-26 and slides 06, 07, 08 change |
+| A-10 | Video rounding: margins to whole units with thousands separators, percentages to 1 decimal (63%, 48% and 64% to whole numbers), predicted/actual count ratios to 2 decimals; chart axes in thousands ('+20k'); '~470 a day' and 'about 2 min' are rounded labels. | `this audit (display convention)` | F-05, F-07, F-09, F-22, F-28, F-29, F-34, F-44, F-48, F-49, F-50, F-51, F-52, F-53, F-54, F-58 | figures F-05, F-07, F-09, F-22, F-28, F-29, F-34, F-44, F-48, F-49, F-50, F-51, F-52, F-53, F-54, F-58 and slides 02, 05, 06, 08, 09, 10 change |
 | A-11 | Slide 01 (industry, everyday problems) is general e-commerce knowledge used as context, matched to the README problem statement. It is not a result of this repo and carries no numbers. | `author's framing; README 'The problem'` | F-01, F-02 | figures F-01, F-02 and slides 01 change |
+| A-12 | The shipped model is the plain (unweighted) LightGBM with an isotonic calibrator fitted on May-Aug 2025, a window the booster never trained or early-stopped on. The COD rule and the reported daily forecast use it; the class-weighted LightGBM is fitted only as a comparison, and a test requires that weighting breaks the margin forecast. | `src/order_margin/models.py:71 (class_weighted: bool = False); pipeline.py:122 (isotonic fitted on the calibration window), :180 (daily forecast columns), :203 (g_iso = gain_hat(gbm, iso['gbm'])), :205 and :229 (weighted model as a scored comparison), :252 (block_iso); tests/test_pipeline.py:24` | F-48, F-49, F-50, F-51, F-52, F-53, F-54, F-55, F-61 | figures F-48, F-49, F-50, F-51, F-52, F-53, F-54, F-55, F-61 and slides 09 change |
 
 ## 4. Slide by slide
 
@@ -181,6 +186,7 @@ python3 docs/demo/source/tools/build_audit_report.py docs/demo/source/audit/fact
 
 > 01 · THE INDUSTRY  
 > Every order can end five ways. Only one of them earns money.  
+> Who ships cash-on-delivery (COD) orders, and the four ways a lost order costs them money.  
 > WHO LIVES WITH THIS · Online marketplaces · Cash-on-delivery e-commerce · Finance & checkout ops teams  
 > 01 Cash parcels refused at the door — Shipped out and back, no cash collected  
 > 02 Returns, cancellations and chargebacks — Each one costs a different amount  
@@ -201,18 +207,20 @@ python3 docs/demo/source/tools/build_audit_report.py docs/demo/source/audit/fact
 
 - The whole slide is context; no repo figures.
 
-**To change this slide:** Edit the chips (#ctx-c1..3) and cards (#ctx-k1..4) in compositions/s01-context.html. (project folder `docs/demo/source`).
+**To change this slide:** Edit the subtitle (#ctx-sub), chips (#ctx-c1..3) and cards (#ctx-k1..4) in compositions/s01-context.html. (project folder `docs/demo/source`).
 
 ### Slide 02: This project  
-*6.8-11.6 s · composition `compositions/s02-hook.html`*
+*6.8-12.0 s · composition `compositions/s02-hook.html`*
 
 ![Slide 02](slides/slide-02.jpg)
 
 **On-screen text (verbatim)**
 
 > 02 · THIS PROJECT  
+> The project in one line: a marketplace where half the orders are paid in cash on delivery.  
 > 341,880 orders, 2 years. 48% paid in cash at the door. Five ways each one can end.  
 > ~470 orders a day · 6 delivery zones, 2 remote · 1 in 5 orders is not delivered  
+> Not delivered = returned, cancelled, refused at the door, or a card payment disputed as fraud (a chargeback).  
 
 **Figures on this slide**
 
@@ -232,10 +240,10 @@ python3 docs/demo/source/tools/build_audit_report.py docs/demo/source/audit/fact
 
 - Rings in the background are decoration.
 
-**To change this slide:** Headline spans #hook-l1..l3 and chips #hook-f1..f3 in compositions/s02-hook.html; volumes come from scripts/generate_data.py (make data). (project folder `docs/demo/source`).
+**To change this slide:** Headline spans #hook-l1..l3, chips #hook-f1..f3 and the definition #hook-def in compositions/s02-hook.html; volumes come from scripts/generate_data.py (make data). (project folder `docs/demo/source`).
 
 ### Slide 03: How it works (white chapter, slide A)  
-*11.3-19.3 s · composition `compositions/explainer.html (CONFIG.blocks, CONFIG.groups, CONFIG.loop)`*
+*11.7-19.7 s · composition `compositions/explainer.html (CONFIG.blocks, CONFIG.groups, CONFIG.loop)`*
 
 ![Slide 03](slides/slide-03.jpg)
 
@@ -243,6 +251,7 @@ python3 docs/demo/source/tools/build_audit_report.py docs/demo/source/audit/fact
 
 > 03 · HOW IT WORKS  
 > From an order to a decision  
+> Read left to right: predict how each order ends, price each ending in money, then decide on cash on delivery.  
 > ORDERS basket, payment, history → [THE MODEL: PREDICT 5 ways it could end → CALIBRATE make the odds honest] → [THE MONEY: PRICE IT money made or lost in each case → DECIDE keep or hide cash on delivery] → PLAN OUT ✓ daily margin ✓ cash rules ✓ beats risk rule  
 > scored as cash and as card (loop over PREDICT)  
 
@@ -261,10 +270,10 @@ python3 docs/demo/source/tools/build_audit_report.py docs/demo/source/audit/fact
 
 - Icons and colours are a visual language, not data.
 
-**To change this slide:** Edit CONFIG in compositions/explainer.html; badge truth comes from F-11. (project folder `docs/demo/source`).
+**To change this slide:** Edit CONFIG and #ex-a-sub in compositions/explainer.html; badge truth comes from F-11. (project folder `docs/demo/source`).
 
 ### Slide 04: The key idea (white chapter, slide B)  
-*19.3-26.3 s · composition `compositions/explainer.html (#ex-b ...)`*
+*19.7-26.7 s · composition `compositions/explainer.html (#ex-b ...)`*
 
 ![Slide 04](slides/slide-04.jpg)
 
@@ -272,11 +281,12 @@ python3 docs/demo/source/tools/build_audit_report.py docs/demo/source/audit/fact
 
 > 04 · THE KEY IDEA  
 > Decide on margin, not risk  
+> Two orders a risk score calls equally risky. Bars = margin each way; the longer bar wins.  
 > Score each cash order twice — once as cash on delivery, once as a card order  
 > Price every outcome in money — a refusal, a return and a fraud cost different amounts  
 > Hide cash only if card earns more — after counting buyers who will not switch to card  
-> TWO RISKY CASH ORDERS · SCHEMATIC: Order A big basket, often refused (if cash > if card × switch) KEEP CASH; Order B thin basket, often refused (if cash < if card × switch) HIDE CASH. Same risk, opposite decisions. A risk score would block both.  
-> Test window: margin rule +22,258 vs risk score −2,113 at the same block rate (both scored on true probabilities).  
+> TWO RISKY CASH ORDERS · SCHEMATIC: Order A big basket, often refused (if cash > if card × switch %) KEEP CASH; Order B thin basket, often refused (if cash < if card × switch %) HIDE CASH. Same risk, opposite decisions. A risk score would block both.  
+> Real test window, same number of orders blocked: margin rule +22,258, risk score −2,113.  
 
 **Figures on this slide**
 
@@ -294,7 +304,7 @@ python3 docs/demo/source/tools/build_audit_report.py docs/demo/source/audit/fact
 **To change this slide:** Markup under #ex-b in compositions/explainer.html; the footnote figures are F-13 and F-14. (project folder `docs/demo/source`).
 
 ### Slide 05: Architecture  
-*26.0-40.0 s · composition `compositions/s03-architecture.html (N nodes, W wires)`*
+*26.4-40.4 s · composition `compositions/s03-architecture.html (N nodes, W wires)`*
 
 ![Slide 05](slides/slide-05a.jpg)
 
@@ -304,16 +314,17 @@ python3 docs/demo/source/tools/build_audit_report.py docs/demo/source/audit/fact
 
 > 05 · ARCHITECTURE  
 > Probabilities in, money out: one decision per cash order.  
+> Each box is a file in the repo. Data flows left to right and ends in one yes/no per cash-on-delivery order.  
 > Layers: SOURCES · FEATURES · MODELS · CALIBRATION · DECISION · CONSUMERS  
-> config.py Time split (4 date windows) —train · stop · calib · test→ LightGBM  
-> generate.py Order history (341,880 orders, 2024–2025) —order rows→ features.py Features (23 columns, history ≥14 d old) —X · 23 cols→ models.py LightGBM (5-outcome softmax, 186 rounds × 5 trees) —raw p · n×5→ calibration.py Isotonic (1-vs-rest, fit May–Aug 25) —p · sums to 1→ economics.py E[margin] (Σ p × margin, as COD and card) —margin / day→ Finance  
-> features.py with_payment (COD → card): COD rows in, payment = card back into LightGBM (dotted, 2nd pass)  
-> config.py Margin table (fees · shipping) —margin per outcome→ E[margin]; E[cod] · E[card] → policy.py gain > 0 ? (yes: hide COD → Checkout, COD on / off; no: keep COD (default))  
-> human input: Card switch (40% / 60%, assumed input) —conv→ gain > 0 ?  
-> Ghost boxes (compared, not shipped): Platt (compared), Baselines (priors · logistic, class-weighted ✗); runtime 72.8 s pipeline run, offline batch  
-> data/truth True p (scoring only) —true p only→ pipeline.py evaluation: Evaluation · test window Sep–Dec 2025 · 73,024 orders · log-loss · classwise ECE · daily margin error · COD policy on true p · bootstrap 95% CI → outputs/ (report.md)  
-> Legend: data store · config · decision · human input · compared, not shipped · batch flow · 2nd pass, as card · scoring only  
-> CRITICAL PATH order rows → features → LightGBM → isotonic → E[margin] → gain > 0 ? → checkout  
+> config.py Time split (4 date windows) —train · tune · calibrate · test→ LightGBM  
+> generate.py Order history (341,880 orders, 2024–2025) —order rows→ features.py Features (23 columns, history ≥14 d old) —inputs→ models.py LightGBM (5 outcomes at once, 186 boosting rounds) —5 odds→ calibration.py Calibrate (isotonic, fit May–Aug 25) —odds→ economics.py Margin (odds × money, as COD, as card) —margin / day→ Finance  
+> features.py Card version (same order, as card): COD rows in, payment = card back into LightGBM (dotted, 2nd pass)  
+> config.py Margin table (fees · shipping) —margin per outcome→ Margin; COD vs card → policy.py gain > 0 ? (yes: hide COD → Checkout, COD on / off; no: keep COD (default))  
+> human input: Card switch (40% / 60%, assumed input) —rate→ gain > 0 ?  
+> Ghost boxes (not shipped): Platt (compared), Baselines (averages · logistic, class-weighted ✗); runtime 72.8 s full run, offline batch  
+> data/truth True odds (scoring only) —true odds→ pipeline.py evaluation: Evaluation · test window Sep–Dec 2025 · 73,024 orders · how well the odds fit · daily margin error · COD rules scored on the true odds · 95% CI → outputs/ (report.md)  
+> Legend: data store · config · decision · human input · not shipped · data flow · as card · scoring only  
+> CRITICAL PATH order rows → features → LightGBM → calibrate → expected margin → gain > 0 ? → checkout  
 
 **Figures on this slide**
 
@@ -324,14 +335,14 @@ python3 docs/demo/source/tools/build_audit_report.py docs/demo/source/audit/fact
 | F-15 | config.py, generate.py, features.py, models.py, calibration.py, economics.py, policy.py, pipeline.py, data/truth | `src/order_margin/` · classes and functions | - | ✓ |
 | F-16 | 23 columns | `src/order_margin/features.py:21-45` · NUMERIC (20) + CATEGORICAL (3) | 20 + 3 = 23 | ✓ |
 | F-17 | history ≥14 d old | `src/order_margin/features.py:15` · RESOLVE_DAYS = 14 | - | ✓ |
-| F-18 | 186 rounds | `outputs/results.json` · gbm_rounds | - | ✓ |
-| F-19 | × 5 trees / 5-outcome softmax | `src/order_margin/models.py:74-75` · objective multiclass, num_class = N_CLASSES = 5 | 186 rounds x 5 = 930 trees | ✓ |
+| F-18 | 186 boosting rounds | `outputs/results.json` · gbm_rounds | - | ✓ |
+| F-19 | 5 outcomes at once | `src/order_margin/models.py:74-75` · objective multiclass, num_class = N_CLASSES = 5 | - | ✓ |
 | F-20 | fit May–Aug 25 | `src/order_margin/config.py:68-69` · EARLY_STOP_END 2025-04-30, CALIB_END 2025-08-31 | - | ✓ |
 | F-21 | 40% / 60% · assumed input | `src/order_margin/config.py:75` · COD_TO_CARD_CONVERSION | - | ✓ |
 | F-22 | 72.8 s | `outputs/results.json` · runtime_seconds | - | ✓ |
 | F-23 | 73,024 orders | `outputs/results.json` · orders_test | - | ✓ |
-| F-24 | log-loss · classwise ECE · daily margin error · COD policy on true p · bootstrap 95% CI | `src/order_margin/pipeline.py:139-160, 274-275; calibration.py:64-83` · - | - | ✓ |
-| F-25 | 4 date windows · train · stop · calib · test | `src/order_margin/pipeline.py:64-71` · split_masks keys | - | ✓ |
+| F-24 | how well the odds fit · daily margin error · COD rules scored on the true odds · 95% CI | `src/order_margin/pipeline.py:139-160, 274-275; calibration.py:64-83` · - | - | ✓ |
+| F-25 | 4 date windows · train · tune · calibrate · test | `src/order_margin/pipeline.py:64-71` · split_masks keys | - | ✓ |
 
 **Assumptions:** A-01, A-02, A-04, A-05, A-06, A-07
 
@@ -340,11 +351,12 @@ python3 docs/demo/source/tools/build_audit_report.py docs/demo/source/audit/fact
 - Packets moving along the wires show execution order, not timing.
 - 'Finance' and 'Checkout' are the consumers the README names (finance close, checkout COD option); the repo writes files, it does not call a checkout service.
 - 'offline batch' describes how the repo runs (one CLI run over files); no serving latency is measured, so none is shown.
+- In the critical-path phase the other boxes dim to 75% opacity (text stays above 4.5:1).
 
 **To change this slide:** Node array N and wire array W in compositions/s03-architecture.html. (project folder `docs/demo/source`).
 
 ### Slide 06: The system running  
-*39.6-54.2 s · composition `compositions/s04-routes.html; assets/plot-daily.png, assets/plot-frontier.png (from outputs/*.png via tools/darkmap.py)`*
+*40.0-54.6 s · composition `compositions/s04-routes.html (RUN block from tools/export_run.py + tools/inject_block.py)`*
 
 ![Slide 06](slides/slide-06a.jpg)
 
@@ -354,13 +366,16 @@ python3 docs/demo/source/tools/build_audit_report.py docs/demo/source/audit/fact
 
 > 06 · THE SYSTEM RUNNING  
 > 122 test days: the margin each model expected, against what landed.  
-> SALE WEEK (dashed box) · realized · LightGBM + isotonic · flat class rates · class-weighted LightGBM  
-> Sale days: flat class rates miss the day's margin by 22.5%, LightGBM + isotonic by 4.3%. Class weighting forecasts a loss every day.  
-> Blocking COD: margin gained against orders lost.  
-> rank by margin gain (model) · rank by risk score · rank by margin gain (true p)  
-> Margin rule (15.5% of COD hidden) +22,258 · Risk score (same block rate) −2,113 · Block every COD (14,469 orders lost) −509,868  
-> Decided by LightGBM + isotonic, scored on the generator's true probabilities.  
-> x: orders lost (log) · y: margin change · 35,389 COD orders  
+> Each line is one day's total margin. White is what really landed; the closer a line hugs it, the better.  
+> y: margin per day (−60k … +60k) · x: 1 Sep … 31 Dec · SALE DAYS (shaded)  
+> what landed · LightGBM, calibrated · flat averages (finance today) · class-weighted LightGBM  
+> On sale days, flat averages miss the day's margin by 22.5%, the calibrated LightGBM by 4.3%. Class weighting forecasts a loss every day.  
+> Hiding COD: margin gained against orders lost.  
+> Each curve hides COD from more orders, left to right. Higher is better; further right loses more orders.  
+> x: orders lost: customers who do not switch to card (0, 100, 1,000, 10,000) · y: margin change (−60k … +40k) · points: margin rule, risk score, rule of thumb  
+> rank by margin gain (model) · rank by risk score · perfect knowledge (ceiling)  
+> Margin rule (hidden on 15.5% of COD orders) +22,258 · Risk score (same share hidden) −2,113 · Hide COD for all (14,469 orders lost) −509,868  
+> 35,389 COD orders. Decided by the calibrated LightGBM, scored on the simulator's true odds.  
 
 **Figures on this slide**
 
@@ -368,29 +383,31 @@ python3 docs/demo/source/tools/build_audit_report.py docs/demo/source/audit/fact
 |---|---|---|---|---|
 | F-13 | +22,258 | `outputs/policy.csv` · policy='margin rule, gbm + isotonic', margin_change | - | ✓ |
 | F-14 | −2,113 | `outputs/policy.csv` · policy='risk score, same block rate as margin rule on calib (14.6%)', margin_change | - | ✓ |
-| F-26 | expected vs realized daily margin (image) | `outputs/daily_margin.png via tools/darkmap.py` · - | - | manual |
+| F-26 | SVG line chart | `outputs/daily_margin.csv via tools/export_run.py -> assets/run.json -> RUN block in s04-routes.html` · realized, class priors, gbm + isotonic, gbm class-weighted, raw, peak | values rounded to whole units; drawn, not retyped | ✓ |
 | F-27 | 122 test days | `outputs/results.json` · test_days | - | ✓ |
 | F-28 | 22.5% | `outputs/metrics.csv` · model='class priors', daily_mape_peak (0.2254) | x 100 | ✓ |
 | F-29 | 4.3% | `outputs/metrics.csv` · model='gbm + isotonic', daily_mape_peak (0.0431) | x 100 | ✓ |
 | F-30 | Class weighting forecasts a loss every day. | `outputs/daily_margin.csv` · column 'gbm class-weighted, raw' max = -10,259 | max < 0 | ✓ |
-| F-31 | margin gained against orders lost (image) | `outputs/policy_frontier.png via tools/darkmap.py` · - | - | manual |
+| F-31 | SVG line chart, y clipped to -60k..+40k | `outputs/policy_frontier.csv, outputs/policy.csv via tools/export_run.py` · orders_lost, margin_change per ranking; policy rows | same symlog x-axis as plots.py (linear below 100) | ✓ |
 | F-32 | −509,868 | `outputs/policy.csv` · policy='block every COD order', margin_change | - | ✓ |
 | F-33 | 14,469 orders lost | `outputs/policy.csv` · orders_lost = 14,468.6 | rounded | ✓ |
-| F-34 | 15.5% of COD hidden | `outputs/policy.csv` · policy='margin rule, gbm + isotonic', blocked_share_of_cod (0.1554) | x 100 | ✓ |
+| F-34 | hidden on 15.5% of COD orders | `outputs/policy.csv` · policy='margin rule, gbm + isotonic', blocked_share_of_cod (0.1554) | x 100 | ✓ |
 | F-35 | 35,389 COD orders | `outputs/results.json` · cod_orders_test | - | ✓ |
 | F-36 | Risk score · same block rate | `src/order_margin/pipeline.py:206-218` · threshold_for_share(risk_score(pc_c), share) | - | ✓ |
+
+- *F-31 note:* Curves leave the bottom of the chart; 'hide COD for all' (-509,868) is off the chart and shown in the panel.
 
 **Assumptions:** A-02, A-03, A-04, A-06, A-09
 
 **Illustrative, not data:**
 
-- Plots are the repo's real figures, colour-inverted to dark; legends are redrawn because the originals were painted over.
-- The frontier zooms 1.7x towards its top band; the zoom crops the y tick labels.
+- Both charts are drawn as SVG from the repo's CSVs (F-26, F-31); no value is typed by hand.
+- The frontier's y axis is clipped to −60k…+40k so the useful top band is readable; curves leave the bottom, and 'hide COD for all' is reported in the panel instead.
 
-**To change this slide:** Captions and counters in compositions/s04-routes.html; plots come from make run → outputs/daily_margin.png and outputs/policy_frontier.png, then tools/darkmap.py. (project folder `docs/demo/source`).
+**To change this slide:** Re-run tools/export_run.py and tools/inject_block.py after make run; captions and panel text in compositions/s04-routes.html. (project folder `docs/demo/source`).
 
 ### Slide 07: End-user value (white)  
-*53.9-66.9 s · composition `compositions/value.html (SHEET block injected by tools/inject_sheet.py)`*
+*54.3-67.3 s · composition `compositions/value.html (SHEET block injected by tools/inject_sheet.py)`*
 
 ![Slide 07](slides/slide-07.jpg)
 
@@ -398,6 +415,7 @@ python3 docs/demo/source/tools/build_audit_report.py docs/demo/source/audit/fact
 
 > 07 · END-USER VALUE  
 > What the checkout ops lead gets  
+> Each row is one cash order on a sale-week day. GAIN = card margin × switch rate − COD margin; above 0 means hide COD.  
 > COD DECISIONS · SALE WEEK · 2025-11-24 — columns ORDER, ZONE, CATEGORY, BASKET, REFUSE, IF COD, IF CARD, GAIN, ACTION  
 > 315400 remote_south home 1,824 47% 127 295 +49.5 HIDE COD  
 > 316055 remote_north grocery 859 46% 25 80 +23.2 HIDE COD  
@@ -433,7 +451,7 @@ python3 docs/demo/source/tools/build_audit_report.py docs/demo/source/audit/fact
 **To change this slide:** Re-run tools/export_cod_sheet.py, then tools/inject_sheet.py (--rows / --animate pick the orders); layout in compositions/value.html. (project folder `docs/demo/source`).
 
 ### Slide 08: Results  
-*66.6-75.4 s · composition `compositions/s05-results.html (stats array)`*
+*67.0-75.8 s · composition `compositions/s05-results.html (stats array)`*
 
 ![Slide 08](slides/slide-08.jpg)
 
@@ -441,11 +459,12 @@ python3 docs/demo/source/tools/build_audit_report.py docs/demo/source/audit/fact
 
 > 08 · RESULTS · TEST WINDOW SEP–DEC 2025  
 > Margin earned on COD, and a forecast that holds in sale week.  
-> DECISION +22,258 margin, COD margin rule · risk score: −2,113  
-> DECISION 63% of the gain a perfect model gets · true p ceiling: +35,479  
-> FORECAST 4.3% daily margin error, sale days · flat class rates: 22.5%  
-> EVALUATION +24,371 margin rule minus risk rule · 95% CI 21,580 to 27,556  
-> 73,024 test orders · 35,389 paid by COD · every policy scored on the generator's true probabilities  
+> Margin = profit after shipping, fees and losses, so higher is better. Forecast error: lower is better.  
+> DECISION +22,258 extra margin from the COD rule · risk score: −2,113  
+> DECISION 63% of the gain a perfect model gets · perfect model: +35,479  
+> FORECAST 4.3% forecast error per sale day · flat averages: 22.5%  
+> EVALUATION +24,371 better than ranking COD orders on risk · 95% CI: 21,580–27,556  
+> 73,024 test orders, 35,389 paid by COD. Every rule is scored on the simulator's true odds. CI = 95% confidence range.  
 
 **Figures on this slide**
 
@@ -458,9 +477,9 @@ python3 docs/demo/source/tools/build_audit_report.py docs/demo/source/audit/fact
 | F-29 | 4.3% | `outputs/metrics.csv` · model='gbm + isotonic', daily_mape_peak (0.0431) | x 100 | ✓ |
 | F-35 | 35,389 COD orders | `outputs/results.json` · cod_orders_test | - | ✓ |
 | F-44 | 63% | `outputs/policy.csv` · margin rule 22,258 / true-probability ceiling 35,479 | 22,258 / 35,479 = 62.7% | ✓ |
-| F-45 | true p ceiling: +35,479 | `outputs/policy.csv` · policy='margin rule, true probabilities (ceiling)', margin_change | - | ✓ |
+| F-45 | perfect model: +35,479 | `outputs/policy.csv` · policy='margin rule, true probabilities (ceiling)', margin_change | - | ✓ |
 | F-46 | +24,371 | `outputs/results.json` · margin_minus_risk_rule | - | ✓ |
-| F-47 | 95% CI 21,580 to 27,556 | `outputs/results.json` · margin_minus_risk_rule_ci95 | - | ✓ |
+| F-47 | 95% CI: 21,580–27,556 | `outputs/results.json` · margin_minus_risk_rule_ci95 | - | ✓ |
 
 **Assumptions:** A-02, A-03, A-06, A-08, A-09, A-10
 
@@ -470,46 +489,50 @@ python3 docs/demo/source/tools/build_audit_report.py docs/demo/source/audit/fact
 
 **To change this slide:** The stats array and card text in compositions/s05-results.html. (project folder `docs/demo/source`).
 
-### Slide 09: What didn't win  
-*75.0-81.6 s · composition `compositions/s06-twist.html`*
+### Slide 09: Lesson and fix  
+*75.4-84.4 s · composition `compositions/s06-twist.html`*
 
 ![Slide 09](slides/slide-09.jpg)
 
 **On-screen text (verbatim)**
 
-> 09 · WHAT DIDN'T WIN  
-> Boosting barely beat a logistic regression.  
-> Log-loss on 73,024 test orders, drawn as the gain over flat class rates (longer is better)  
-> Flat class rates (finance's averages) 0.7442 · Logistic regression (raw · macro-F1 0.290) 0.6475 · LightGBM (raw · macro-F1 0.294) 0.6469 · LightGBM + isotonic (ECE 0.0027 → 0.0035) 0.6478 · True probabilities (ceiling) 0.6181  
-> Why: outcomes here are close to additive in log-odds, the shape logistic regression assumes. Isotonic only earned its place repairing class weighting (ECE 0.206 → 0.009).  
+> 09 · LESSON AND FIX  
+> Weighting rare outcomes broke the margin. So I left it out.  
+> Predicted ÷ actual count of each bad outcome on 73,024 test orders. 1.00× is right; higher = false alarms.  
+> THE LESSON · Weighting rare outcomes over-counts them · Class-weighted LightGBM, the usual rare-outcome fix · Fraud (card chargeback) 16.47× TRAP · Refused (at the door) 3.80× · Returned (sent back) 2.49×  
+> Fed to the COD rule, it hides COD on 64% of cash orders: −168,782 margin.  
+> THE FIX, IN THE REPO · PICKED · Ship the plain model, calibrated · LightGBM, no weighting, calibrated on 4 unseen months · Fraud 1.12× · Refused 1.02× · Returned 0.98×  
+> The COD rule and the daily forecast run on this model; the weighted one is only a comparison.  
+> PAYOFF · COD rule on 35,389 cash orders: plain model +22,258 vs class-weighted −168,782  
 
 **Figures on this slide**
 
 | ID | Shown | Source · key | Calculation | Check |
 |---|---|---|---|---|
+| F-13 | +22,258 | `outputs/policy.csv` · policy='margin rule, gbm + isotonic', margin_change | - | ✓ |
 | F-23 | 73,024 orders | `outputs/results.json` · orders_test | - | ✓ |
-| F-48 | 0.7442 | `outputs/metrics.csv` · model='class priors', log_loss | - | ✓ |
-| F-49 | 0.6475 | `outputs/metrics.csv` · model='logistic, raw', log_loss | - | ✓ |
-| F-50 | 0.6469 | `outputs/metrics.csv` · model='gbm, raw', log_loss | - | ✓ |
-| F-51 | 0.6478 | `outputs/metrics.csv` · model='gbm + isotonic', log_loss | - | ✓ |
-| F-52 | 0.6181 | `outputs/metrics.csv` · model='true probabilities (ceiling)', log_loss | - | ✓ |
-| F-53 | macro-F1 0.290 / 0.294 | `outputs/metrics.csv` · macro_f1 | - | ✓ |
-| F-54 | ECE 0.0027 → 0.0035 | `outputs/metrics.csv` · ece_mean | - | ✓ |
-| F-55 | ECE 0.206 → 0.009 | `outputs/metrics.csv` · ece_mean (0.2063, 0.0093) | rounded to 3 decimals | ✓ |
-| F-56 | bars 6 / 767 / 772 / 764 / 1000 px | `outputs/metrics.csv` · (0.7442 - log_loss) / (0.7442 - 0.6181) x 1000 | logistic 767, LightGBM 772, LightGBM + isotonic 764 | ✓ |
+| F-35 | 35,389 COD orders | `outputs/results.json` · cod_orders_test | - | ✓ |
+| F-48 | 16.47× | `outputs/metrics.csv` · model='gbm class-weighted, raw', count_ratio_fraud | - | ✓ |
+| F-49 | 3.80× | `outputs/metrics.csv` · model='gbm class-weighted, raw', count_ratio_failed | - | ✓ |
+| F-50 | 2.49× | `outputs/metrics.csv` · model='gbm class-weighted, raw', count_ratio_returned | - | ✓ |
+| F-51 | 1.12× | `outputs/metrics.csv` · model='gbm + isotonic', count_ratio_fraud | - | ✓ |
+| F-52 | 1.02× | `outputs/metrics.csv` · model='gbm + isotonic', count_ratio_failed | - | ✓ |
+| F-53 | 0.98× | `outputs/metrics.csv` · model='gbm + isotonic', count_ratio_returned | - | ✓ |
+| F-54 | 64% of cash orders | `outputs/policy.csv` · policy='margin rule, class-weighted gbm', blocked_share_of_cod (0.6393) | x 100 | ✓ |
+| F-55 | −168,782 | `outputs/policy.csv` · policy='margin rule, class-weighted gbm', margin_change | - | ✓ |
+| F-56 | bars 260 / 60 / 39 px (lesson) and 18 / 16 / 15 px (fix) | `outputs/metrics.csv` · count_ratio_* / max x 260 | round(ratio / 16.4749 x 260) | ✓ |
+| F-61 | Ship the plain model, calibrated · PICKED · the weighted one is only a comparison | `src/order_margin/models.py:71; pipeline.py:122, 180, 203, 229, 252; tests/test_pipeline.py:24` · - | - | ✓ |
 
-- *F-56 note:* The flat-rates bar is a 6 px stub (its gain is zero by definition).
-
-**Assumptions:** A-01, A-07, A-10
+**Assumptions:** A-02, A-03, A-06, A-07, A-10, A-12
 
 **Illustrative, not data:**
 
-- Bar lengths: (0.7442 − log-loss) / (0.7442 − 0.6181) × 1,000 px (F-56).
+- Bars use one shared scale, 16.47× = 260 px (F-56); bars are neutral grey on the lesson side and mint for the shipped model.
 
-**To change this slide:** Rows #twist-r1..r5 (bar widths are inline styles) in compositions/s06-twist.html. (project folder `docs/demo/source`).
+**To change this slide:** Rows #twist-l1..l3 / #twist-r1..r3 (bar widths are inline styles) and the payoff strip in compositions/s06-twist.html. (project folder `docs/demo/source`).
 
 ### Slide 10: End card  
-*81.2-85.6 s · composition `compositions/s07-end.html`*
+*84.0-88.4 s · composition `compositions/s07-end.html`*
 
 ![Slide 10](slides/slide-10.jpg)
 
@@ -520,6 +543,7 @@ python3 docs/demo/source/tools/build_audit_report.py docs/demo/source/audit/fact
 > github.com/kavya2693/order-outcome-margin  
 > LightGBM · scikit-learn · pandas · Python  
 > $ make run   # 341,880 orders, about 2 min  
+> One command rebuilds every table the numbers in this video come from.  
 
 **Figures on this slide**
 
@@ -534,7 +558,7 @@ python3 docs/demo/source/tools/build_audit_report.py docs/demo/source/audit/fact
 
 **Illustrative, not data:**
 
-- Faded plot in the background is the policy frontier figure.
+- Faded curves in the corner are the COD frontier from outputs/policy_frontier.csv, drawn without text by tools/make_end_plot.py.
 
 **To change this slide:** Text in compositions/s07-end.html. (project folder `docs/demo/source`).
 
@@ -543,23 +567,26 @@ python3 docs/demo/source/tools/build_audit_report.py docs/demo/source/audit/fact
 | Input / assumption | Affected figures | Affected slides | Files to edit | Commands to re-run |
 |---|---|---|---|---|
 | A-01: All data is synthetic, produced by a seeded generator sized to the production problem (341,880 orders over 2024-2025, six zones, five categories, COD about 48%) | all figures | 01, 02, 03, 04, 05, 06, 07, 08, 09, 10 | `src/order_margin/generate.py; src/order_margin/world.py` | `make data; make run` |
-| A-02: Card conversion: 40% of blocked customers younger than 30 days and 60% of the rest switch to a card | F-13, F-14, F-21, F-32, F-33, F-34, F-39, F-40, F-41, F-44, F-45, F-46, F-47 | 04, 05, 06, 07, 08 | `src/order_margin/config.py:75` | `make run; export_cod_sheet.py + inject_sheet.py` |
-| A-03: Unit economics are one table per category (gross margin, resale loss, shipping legs, COD/card/wallet fees, a 45 chargeback fee) | F-13, F-14, F-28, F-29, F-30, F-32, F-40, F-41, F-44, F-45, F-46, F-47 | 04, 06, 07, 08 | `src/order_margin/config.py:22-60` | `make run; export_cod_sheet.py + inject_sheet.py` |
-| A-04: Time split: train 2024-01-01 | F-20, F-23, F-25, F-27, F-28, F-29, F-35 | 05, 06, 08, 09 | `src/order_margin/config.py:67-71` | `make run` |
+| A-02: Card conversion: 40% of blocked customers younger than 30 days and 60% of the rest switch to a card | F-13, F-14, F-21, F-32, F-33, F-34, F-39, F-40, F-41, F-44, F-45, F-46, F-47, F-54, F-55 | 04, 05, 06, 07, 08, 09 | `src/order_margin/config.py:75` | `make run; export_cod_sheet.py + inject_sheet.py` |
+| A-03: Unit economics are one table per category (gross margin, resale loss, shipping legs, COD/card/wallet fees, a 45 chargeback fee) | F-13, F-14, F-28, F-29, F-30, F-32, F-40, F-41, F-44, F-45, F-46, F-47, F-55 | 04, 06, 07, 08, 09 | `src/order_margin/config.py:22-60` | `make run; export_cod_sheet.py + inject_sheet.py` |
+| A-04: Time split: train 2024-01-01 | F-20, F-23, F-25, F-27, F-28, F-29, F-35, F-48, F-49, F-50, F-51, F-52, F-53 | 05, 06, 08, 09 | `src/order_margin/config.py:67-71` | `make run` |
 | A-05: Outcomes are known 14 days after the order; customer history features only use orders placed at least 14 days earlier, shrunk towards fixed long-run rates | F-17 | 05 | `src/order_margin/features.py:15` | `make run` |
-| A-06: COD policies are scored on the generator's true outcome probabilities under COD and under card (data/truth/order_truth | F-13, F-14, F-32, F-40, F-44, F-45, F-46, F-47 | 04, 06, 07, 08 | `src/order_margin/pipeline.py` | `make run` |
-| A-07: LightGBM settings: multiclass, learning rate 0 | F-18, F-19, F-50, F-51 | 05, 09 | `src/order_margin/models.py:71-89` | `make run` |
+| A-06: COD policies are scored on the generator's true outcome probabilities under COD and under card (data/truth/order_truth | F-13, F-14, F-32, F-40, F-44, F-45, F-46, F-47, F-55 | 04, 06, 07, 08, 09 | `src/order_margin/pipeline.py` | `make run` |
+| A-07: LightGBM settings: multiclass, learning rate 0 | F-18, F-19, F-48, F-49, F-50, F-51, F-52, F-53 | 05, 09 | `src/order_margin/models.py:71-89` | `make run` |
 | A-08: One seed and one test window | F-46, F-47 | 08 | `src/order_margin/config.py:78` | `make data; make run` |
-| A-09: 'Sale days' = days flagged is_peak: the November sale week (2025-11-21 | F-28, F-29, F-37 | 06, 07, 08 | `src/order_margin/generate.py:30-31` | `make data; make run` |
-| A-10: Video rounding: margins to whole units with thousands separators, percentages to 1 decimal (63% and 48% to whole numbers), log-loss to 4 decimals, macro-F1 and ECE as in report | F-05, F-07, F-09, F-22, F-28, F-29, F-34, F-44, F-55, F-58 | 02, 05, 06, 08, 09, 10 | `the composition file named on each slide` | `hyperframes render` |
+| A-09: 'Sale days' = days flagged is_peak: the November sale week (2025-11-21 | F-28, F-29, F-37, F-26 | 06, 07, 08 | `src/order_margin/generate.py:30-31` | `make data; make run` |
+| A-10: Video rounding: margins to whole units with thousands separators, percentages to 1 decimal (63%, 48% and 64% to whole numbers), predicted/actual count ratios to 2 decimals; chart axes in thousands ('+20k'); '~470 a day' and 'about 2 min' are rounded labels | F-05, F-07, F-09, F-22, F-28, F-29, F-34, F-44, F-48, F-49, F-50, F-51, F-52, F-53, F-54, F-58 | 02, 05, 06, 08, 09, 10 | `the composition file named on each slide` | `hyperframes render` |
 | A-11: Slide 01 (industry, everyday problems) is general e-commerce knowledge used as context, matched to the README problem statement | F-01, F-02 | 01 | `compositions/s01-context.html` | `hyperframes render` |
+| A-12: The shipped model is the plain (unweighted) LightGBM with an isotonic calibrator fitted on May-Aug 2025, a window the booster never trained or early-stopped on | F-48, F-49, F-50, F-51, F-52, F-53, F-54, F-55, F-61 | 09 | `src/order_margin/pipeline.py:203; src/order_margin/models.py:71` | `make run` |
 
 ## 6. Known differences and caveats
 
 - The COD gain rests on an assumed card conversion (40% / 60%). With decisions fixed, 20 points lower conversion breaks even and 30 points lower loses 9,714 (outputs/conversion_sensitivity.csv, A-02). The README names this the biggest gap.
 - Policies are scored on the generator's true probabilities, which only exist because the data is synthetic (A-06). On real data the same comparison needs a randomised checkout holdout.
 - Orders lost are counted, not priced: a customer pushed away may not come back (README 'Known limitations').
-- 'Sale days' in the 22.5% / 4.3% figures include 11.11 as well as the Nov 21-29 sale week; the dashed box on slide 06 marks the sale week only (A-09).
+- 'Sale days' in the 22.5% / 4.3% figures include 11.11 as well as the Nov 21-29 sale week; slide 06 shades all ten days (A-09).
+- Slide 09's payoff compares the class-weighted model without calibration (the repo's 'margin rule, class-weighted gbm') against the shipped LightGBM + isotonic. The plain booster without calibration scores +22,405 (outputs/policy.csv 'margin rule, uncalibrated gbm'), so the gap comes from the weighting, not from calibration.
+- Slide 09 no longer shows two narrower results the README still reports under 'What didn't win' and 'The result': LightGBM barely beats logistic regression (log-loss 0.6469 vs 0.6475), and isotonic calibration did nothing for the plain booster (ECE 0.0027 -> 0.0035). Isotonic did repair the class-weighted model (ECE 0.206 -> 0.009) but its margin stayed 4.2% off.
 - Slide 07 rows come from a re-run of the repo's own model for 2025-11-24 (tools/export_cod_sheet.py); the re-run reproduces the repo's 186 rounds and its 5,498 hidden COD orders over the test window exactly (F-42).
 - The architecture's 'Finance' and 'Checkout' are the README's consumers; the repo itself writes files (outputs/) and runs as one offline batch. No serving latency exists, so none is shown.
 - Slide 01 statements are general industry knowledge (A-11).
